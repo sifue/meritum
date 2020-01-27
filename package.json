@@ -1,0 +1,37 @@
+{
+  "name": "meritum",
+  "version": "1.0.0",
+  "private": false,
+  "author": "Soichiro-Yoshimura <yoshimura@soichiro.org>",
+  "description": "Chatbot game for Slack.",
+  "scripts": {
+    "start": "bin/hubot",
+    "build": "node_modules/.bin/tsc"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "dependencies": {
+    "hubot": "^3.3.2",
+    "hubot-diagnostics": "^1.0.0",
+    "hubot-scripts": "^2.17.2",
+    "hubot-slack": "^4.7.1",
+    "moment": "^2.24.0",
+    "pg": "^7.17.1",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^5.21.3"
+  },
+  "engines": {
+    "node": "12.14.1"
+  },
+  "devDependencies": {
+    "@types/bluebird": "^3.5.29",
+    "@types/hubot": "^2.19.5",
+    "@types/moment": "^2.13.0",
+    "@types/node": "^13.5.0",
+    "@types/sequelize": "^4.28.8",
+    "typescript": "^3.7.5"
+  }
+}
