@@ -12,9 +12,10 @@ import { LoginBonus } from './models/loginBonuses';
 
 import { Slack, SlackBot } from './types/meritum';
 
-const LOGIN_BONUS_MERITUN = 100;
+const LOGIN_BONUS_MERITUN = 100; // ログインボーナス
 const BOT_INITIAL_MERITUM = 20000; // ボットの初期めりたん
 const MAX_JANKEN_BET = 10; // 最大ベット
+const GACHA_MERITUM = 80; // ガチャ費用
 
 /**
  * ログインボーナス受領日を取得する、午前7時に変わるため、7時間前の時刻を返す
@@ -187,7 +188,7 @@ module.exports = (robot: Robot<any>) => {
         // 相手がベットできるかチェック
         const account = await Account.findByPk(slackId);
         if (!account) {
-          // ボットアカウントがない場合作る
+          // アカウントがない場合作る
           const meritum = 0;
           await Account.create({
             slackId,
@@ -282,4 +283,105 @@ module.exports = (robot: Robot<any>) => {
       }
     }
   );
+
+  // ガチャ
+  robot.hear(/^mgacha>$/i, async (res: Response<Robot<any>>) => {
+    const user = res.message.user;
+    const slackId = user.id;
+    const name = user.name;
+    const realName = user.real_name;
+    const slack = user.slack as Slack;
+    const displayName = slack.profile.display_name;
+
+    const t = await database.transaction();
+    try {
+      // 相手がガチャできるかチェック
+      const account = await Account.findByPk(slackId);
+      if (!account) {
+        // アカウントがない場合作る
+        const meritum = 0;
+        await Account.create({
+          slackId,
+          name,
+          realName,
+          displayName,
+          meritum,
+          titles: '',
+          numOfTitles: 0
+        });
+
+        res.send(
+          `<@${slackId}>は *${GACHA_MERITUM}めりたん* を所有していないためガチャできません。 ログインボーナスを取得してください。`
+        );
+        await t.commit();
+        return;
+      } else if (account.meritum < GACHA_MERITUM) {
+        // ガチャ費用を持っていない場合、終了
+        res.send(
+          `<@${slackId}>は、ガチャ費用 *${GACHA_MERITUM}めりたん* を所有していないためガチャできません。`
+        );
+        await t.commit();
+        return;
+      }
+
+      const titles = [
+        'A',
+        'B',
+        'C',
+        'D',
+        'E',
+        'F',
+        'G',
+        'H',
+        'I',
+        'J',
+        'K',
+        'L',
+        'M',
+        'N',
+        'O',
+        'P',
+        'Q',
+        'L',
+        'S',
+        'T',
+        'U',
+        'V',
+        'W',
+        'X',
+        'Y',
+        'Z'
+      ];
+      const title = titles[Math.floor(Math.random() * titles.length)];
+
+      let newTitles = account.titles.split('');
+      newTitles.push(title);
+      newTitles = Array.from(new Set(newTitles)).sort();
+      const newTitlesStr = newTitles.join('');
+
+      // 支払い処理と称号追加
+      const newMeritum = account.meritum - GACHA_MERITUM;
+      await Account.update(
+        {
+          meritum: newMeritum,
+          titles: newTitlesStr,
+          numOfTitles: newTitlesStr.length
+        },
+        {
+          where: {
+            slackId: slackId
+          }
+        }
+      );
+
+      await t.commit();
+      res.send(
+        `称号 *${title}* を手に入れました！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、 所有めりたんは *${newMeritum}めりたん* となりました。`
+      );
+    } catch (e) {
+      console.log('Error on mgacha> e:');
+      console.log(e);
+      await t.rollback();
+    }
+  });
 };

@@ -39,9 +39,10 @@ const sequelize_1 = require('sequelize');
 const sequelizeLoader_1 = require('./models/sequelizeLoader');
 const accounts_1 = require('./models/accounts');
 const loginBonuses_1 = require('./models/loginBonuses');
-const LOGIN_BONUS_MERITUN = 100;
+const LOGIN_BONUS_MERITUN = 100; // ログインボーナス
 const BOT_INITIAL_MERITUM = 20000; // ボットの初期めりたん
 const MAX_JANKEN_BET = 10; // 最大ベット
+const GACHA_MERITUM = 80; // ガチャ費用
 /**
  * ログインボーナス受領日を取得する、午前7時に変わるため、7時間前の時刻を返す
  * @returns {Date} 7時間前の時刻
@@ -201,7 +202,7 @@ module.exports = robot => {
         // 相手がベットできるかチェック
         const account = yield accounts_1.Account.findByPk(slackId);
         if (!account) {
-          // ボットアカウントがない場合作る
+          // アカウントがない場合作る
           const meritum = 0;
           yield accounts_1.Account.create({
             slackId,
@@ -286,6 +287,102 @@ module.exports = robot => {
         yield t.commit();
       } catch (e) {
         console.log('Error on mjanken> e:');
+        console.log(e);
+        yield t.rollback();
+      }
+    })
+  );
+  // ガチャ
+  robot.hear(/^mgacha>$/i, res =>
+    __awaiter(void 0, void 0, void 0, function*() {
+      const user = res.message.user;
+      const slackId = user.id;
+      const name = user.name;
+      const realName = user.real_name;
+      const slack = user.slack;
+      const displayName = slack.profile.display_name;
+      const t = yield sequelizeLoader_1.database.transaction();
+      try {
+        // 相手がガチャできるかチェック
+        const account = yield accounts_1.Account.findByPk(slackId);
+        if (!account) {
+          // アカウントがない場合作る
+          const meritum = 0;
+          yield accounts_1.Account.create({
+            slackId,
+            name,
+            realName,
+            displayName,
+            meritum,
+            titles: '',
+            numOfTitles: 0
+          });
+          res.send(
+            `<@${slackId}>は *${GACHA_MERITUM}めりたん* を所有していないためガチャできません。 ログインボーナスを取得してください。`
+          );
+          yield t.commit();
+          return;
+        } else if (account.meritum < GACHA_MERITUM) {
+          // ガチャ費用を持っていない場合、終了
+          res.send(
+            `<@${slackId}>は、ガチャ費用 *${GACHA_MERITUM}めりたん* を所有していないためガチャできません。`
+          );
+          yield t.commit();
+          return;
+        }
+        const titles = [
+          'A',
+          'B',
+          'C',
+          'D',
+          'E',
+          'F',
+          'G',
+          'H',
+          'I',
+          'J',
+          'K',
+          'L',
+          'M',
+          'N',
+          'O',
+          'P',
+          'Q',
+          'L',
+          'S',
+          'T',
+          'U',
+          'V',
+          'W',
+          'X',
+          'Y',
+          'Z'
+        ];
+        const title = titles[Math.floor(Math.random() * titles.length)];
+        let newTitles = account.titles.split('');
+        newTitles.push(title);
+        newTitles = Array.from(new Set(newTitles)).sort();
+        const newTitlesStr = newTitles.join('');
+        // 支払い処理と称号追加
+        const newMeritum = account.meritum - GACHA_MERITUM;
+        yield accounts_1.Account.update(
+          {
+            meritum: newMeritum,
+            titles: newTitlesStr,
+            numOfTitles: newTitlesStr.length
+          },
+          {
+            where: {
+              slackId: slackId
+            }
+          }
+        );
+        yield t.commit();
+        res.send(
+          `称号 *${title}* を手に入れました！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、 所有めりたんは *${newMeritum}めりたん* となりました。`
+        );
+      } catch (e) {
+        console.log('Error on mgacha> e:');
         console.log(e);
         yield t.rollback();
       }
