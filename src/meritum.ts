@@ -234,7 +234,7 @@ module.exports = (robot: Robot<any>) => {
 
         if (botHand === hand) {
           res.send(
-            `ジャンケン！ ${botHand}！... *あいこ* だね。またの機会にね。`
+            `ジャンケン！ ${botHand}！... *あいこ* だね。またのチャレンジしてね。`
           );
           await t.commit();
           return;
@@ -488,7 +488,7 @@ module.exports = (robot: Robot<any>) => {
       await t.commit();
       const titlesWithAlt = account.titles || 'なし';
       res.send(
-        `きみの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 *${account.meritum}めりたん* だよ。`
+        `きみの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、めりたん数は *${account.meritum}めりたん* だよ。`
       );
     } catch (e) {
       console.log('Error on mself> e:');
@@ -583,7 +583,7 @@ module.exports = (robot: Robot<any>) => {
       await t.commit();
       const titlesWithAlt = account.titles || 'なし';
       res.send(
-        `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 *${account.meritum}めりたん* だよ。`
+        `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、めりたん数は *${account.meritum}めりたん* だよ。`
       );
     } catch (e) {
       console.log('Error on mrank> e:');
