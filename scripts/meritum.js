@@ -63,18 +63,18 @@ module.exports = robot => {
   // ヘルプ表示
   robot.hear(/^mhelp>$/i, res => {
     res.send(
-      '*プロジェクトmeritum* とは、 *めりたん* と称号を集めるプロジェクト。' +
+      '*プロジェクトmeritum* とは、 *めりたん* と *称号* を集めるプロジェクト。' +
         '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう。' +
         '他人に迷惑をかけたりしないように！ *めりたん* が消滅します！' +
-        'めりたんbotをランキング100以下にしたら勝利。\n' +
-        ':point_down::point_down::point_down::point_down:コマンド説明:point_down::point_down::point_down::point_down:\n' +
+        'めりたんbotをランキング101以下にしたらユーザーたちの勝利となります。\n' +
+        ':point_down::point_down::point_down::point_down: *〜コマンド説明〜* :point_down::point_down::point_down::point_down:\n' +
         '`mhelp>` : めりたんbotの使い方を表示。\n' +
         '`mlogin>` : ログインボーナスの *100めりたん* をゲット。毎朝7時にリセット。\n' +
         `\`mjanken> (グー|チョキ|パー) (1-${MAX_JANKEN_BET})\` : めりたんbotとめりたんを賭けてジャンケン。\n` +
         `\`mgacha>\` : *${GACHA_MERITUM}めりたん* でガチャを回し、称号をゲット。\n` +
-        '`mself>` : 自分のめりたん、称号数、全称号、順位を表示。\n' +
-        '`mranking>` : 称号数、次にめりたんで決まるランキングを表示。\n' +
-        '`mrank> (@ユーザー名)` : 指定したユーザーのめりたん、称号数、全称号、順位を表示。\n' +
+        '`mself>` : 自分の順位、称号数、全称号、めりたんを表示。\n' +
+        '`mranking>` : 称号数で決まるランキングを表示(同称号数なら、めりたんの数順)\n' +
+        '`mrank> (@ユーザー名)` : 指定したユーザーの順位、称号数、全称号、めりたんを表示。\n' +
         '`msend> (@ユーザー名) (数値)` : 指定したユーザーに数値で指定しためりたんを送る'
     );
   });
@@ -320,7 +320,6 @@ module.exports = robot => {
         let account = yield accounts_1.Account.findByPk(slackId);
         if (!account) {
           // アカウントがない場合作る
-          const meritum = 0;
           yield accounts_1.Account.create({
             slackId,
             name,
@@ -393,10 +392,37 @@ module.exports = robot => {
             }
           }
         );
-        yield t.commit();
         res.send(
-          `称号 *${title}* を手に入れました！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、 *${newMeritum}めりたん* となりました。`
+          `称号 *${title}* を手に入れました！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、残り *${newMeritum}めりたん* となりました。`
         );
+        // 既に持っている称号の場合は、5分の1の確率でめりたんbotに引き取られる
+        if (account.titles.includes(title) && Math.random() > 0.8) {
+          let botSlackId = robot.adapter.self.id;
+          let botAccount = yield accounts_1.Account.findByPk(botSlackId);
+          if (!botAccount) {
+            yield t.commit();
+            return;
+          }
+          let newBotTitles = botAccount.titles.split('');
+          newBotTitles.push(title);
+          newBotTitles = Array.from(new Set(newBotTitles)).sort();
+          const newBotTitlesStr = newBotTitles.join('');
+          yield accounts_1.Account.update(
+            {
+              titles: newBotTitlesStr,
+              numOfTitles: newBotTitlesStr.length
+            },
+            {
+              where: {
+                slackId: botSlackId
+              }
+            }
+          );
+          res.send(
+            `なお称号 *${title}* は既に持っていたため、めりたんbotが引き取ることになりました。 めりたんbotの称号数は *${newBotTitlesStr.length}個* 、全称号は *${newBotTitlesStr}* 、 *${botAccount.meritum}めりたん* となりました。`
+          );
+        }
+        yield t.commit();
       } catch (e) {
         console.log('Error on mgacha> e:');
         console.log(e);
@@ -478,7 +504,7 @@ module.exports = robot => {
           limit: 100
         });
         yield t.commit();
-        let message = ':crown:めりたん称号ランキング:crown:\n';
+        let message = ':crown: *〜めりたん称号ランキング〜* :crown:\n';
         let botSlackId = robot.adapter.self.id;
         let isUserWon = true;
         let rank = 1;
@@ -491,7 +517,7 @@ module.exports = robot => {
         }
         if (isUserWon) {
           message +=
-            '\n:tada:めりたんbotをランキングから排除してユーザー達が勝利しました！:tada:';
+            '\n:tada:めりたんbotをランキングから排除してユーザーたちが勝利しました！:tada:';
         }
         res.send(message);
       } catch (e) {
