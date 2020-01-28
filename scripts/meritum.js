@@ -41,8 +41,9 @@ const accounts_1 = require('./models/accounts');
 const loginBonuses_1 = require('./models/loginBonuses');
 const LOGIN_BONUS_MERITUN = 100; // ログインボーナス
 const BOT_INITIAL_MERITUM = 20000; // ボットの初期めりたん
-const MAX_JANKEN_BET = 10; // 最大ベット
-const GACHA_MERITUM = 80; // ガチャ費用
+const MAX_JANKEN_BET = 20; // 最大ベット
+const GACHA_MERITUM = 280; // ガチャ費用
+const USER_INITIAL_MERITUM = GACHA_MERITUM + MAX_JANKEN_BET; // ユーザーの初期めりたん
 /**
  * ログインボーナス受領日を取得する、午前7時に変わるため、7時間前の時刻を返す
  * @returns {Date} 7時間前の時刻
@@ -67,8 +68,8 @@ module.exports = robot => {
         '■コマンド説明\n' +
         '`mhelp>` : めりたんbotの使い方を表示。\n' +
         '`mlogin>` : ログインボーナスの *100めりたん* をゲット。毎朝7時にリセット。\n' +
-        '`mjanken> (グー|チョキ|パー) (1-9)` : めりたんbotと数値で指定しためりたんを賭けてジャンケン。\n' +
-        '`mgacha>` : *80めりたん* でガチャを回して称号をゲット。\n' +
+        `\`mjanken> (グー|チョキ|パー) (1-${MAX_JANKEN_BET})\` : めりたんbotとめりたんを賭けてジャンケン。\n` +
+        `\`mgacha>\` : *${GACHA_MERITUM}めりたん* でガチャを回して称号をゲット。\n` +
         '`mself>` : 自分のめりたん、称号数、全称号、順位を表示。\n' +
         '`mranking>` : 称号数、次にめりたんで決まるランキングを表示。\n' +
         '`mrank> (@ユーザー名)` : 指定したユーザーのめりたん、称号数、全称号、順位を表示。\n' +
@@ -113,7 +114,7 @@ module.exports = robot => {
               name,
               realName,
               displayName,
-              meritum,
+              meritum: USER_INITIAL_MERITUM,
               titles: '',
               numOfTitles: 0
             });
@@ -195,12 +196,13 @@ module.exports = robot => {
         }
         // ボットアカウントがない場合に作成してもまだないなら終了
         if (!botAccount) {
+          res.send('ボットアカウントを作成することができませんでした。');
           console.log('ボットアカウントを作成することができませんでした。');
           yield t.commit();
           return;
         }
         // 相手がベットできるかチェック
-        const account = yield accounts_1.Account.findByPk(slackId);
+        let account = yield accounts_1.Account.findByPk(slackId);
         if (!account) {
           // アカウントがない場合作る
           const meritum = 0;
@@ -209,20 +211,23 @@ module.exports = robot => {
             name,
             realName,
             displayName,
-            meritum,
+            meritum: USER_INITIAL_MERITUM,
             titles: '',
             numOfTitles: 0
           });
-          res.send(
-            `<@${slackId}>は *${bet}めりたん* を所有していないためジャンケンできません。 ログインボーナスを取得してください。`
-          );
-          yield t.commit();
-          return;
+          account = yield accounts_1.Account.findByPk(slackId);
         } else if (account.meritum < bet) {
           // ベット分持っていない場合、終了
           res.send(
             `<@${slackId}>は *${bet}めりたん* を所有していないためジャンケンできません。`
           );
+          yield t.commit();
+          return;
+        }
+        // アカウントがない場合に作成してもまだないなら終了
+        if (!account) {
+          res.send('アカウントを作成することができませんでした。');
+          console.log('アカウントを作成することができませんでした。');
           yield t.commit();
           return;
         }
@@ -304,7 +309,7 @@ module.exports = robot => {
       const t = yield sequelizeLoader_1.database.transaction();
       try {
         // 相手がガチャできるかチェック
-        const account = yield accounts_1.Account.findByPk(slackId);
+        let account = yield accounts_1.Account.findByPk(slackId);
         if (!account) {
           // アカウントがない場合作る
           const meritum = 0;
@@ -313,20 +318,23 @@ module.exports = robot => {
             name,
             realName,
             displayName,
-            meritum,
+            meritum: USER_INITIAL_MERITUM,
             titles: '',
             numOfTitles: 0
           });
-          res.send(
-            `<@${slackId}>は *${GACHA_MERITUM}めりたん* を所有していないためガチャできません。 ログインボーナスを取得してください。`
-          );
-          yield t.commit();
-          return;
+          account = yield accounts_1.Account.findByPk(slackId);
         } else if (account.meritum < GACHA_MERITUM) {
           // ガチャ費用を持っていない場合、終了
           res.send(
             `<@${slackId}>は、ガチャ費用 *${GACHA_MERITUM}めりたん* を所有していないためガチャできません。`
           );
+          yield t.commit();
+          return;
+        }
+        // アカウントがない場合に作成してもまだないなら終了
+        if (!account) {
+          res.send('アカウントを作成することができませんでした。');
+          console.log('アカウントを作成することができませんでした。');
           yield t.commit();
           return;
         }
@@ -416,6 +424,7 @@ module.exports = robot => {
         }
         // アカウントがない場合に作成してもまだないなら終了
         if (!account) {
+          res.send('アカウントを作成することができませんでした。');
           console.log('アカウントを作成することができませんでした。');
           yield t.commit();
           return;
@@ -440,7 +449,38 @@ module.exports = robot => {
           `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${account.titles}* 、 所有めりたんは *${account.meritum}めりたん* です。`
         );
       } catch (e) {
-        console.log('Error on mgacha> e:');
+        console.log('Error on mself> e:');
+        console.log(e);
+        yield t.rollback();
+      }
+    })
+  );
+  // 自分のデータ表示
+  robot.hear(/^mranking>$/i, res =>
+    __awaiter(void 0, void 0, void 0, function*() {
+      const user = res.message.user;
+      const slack = user.slack;
+      const t = yield sequelizeLoader_1.database.transaction();
+      try {
+        const accounts = yield accounts_1.Account.findAll({
+          order: [
+            ['numOfTitles', 'DESC'],
+            ['meritum', 'DESC']
+          ],
+          limit: 100
+        });
+        yield t.commit();
+        let message = '■めりたんランキング\n';
+        let rank = 1;
+        for (const a of accounts) {
+          let rankName = a.displayName || a.realName;
+          rankName = rankName || a.name;
+          message += `*第${rank}位* ${rankName} (称号数: ${a.numOfTitles}、めりたん: ${a.meritum}\n`;
+          rank++;
+        }
+        res.send(message);
+      } catch (e) {
+        console.log('Error on mranking> e:');
         console.log(e);
         yield t.rollback();
       }
