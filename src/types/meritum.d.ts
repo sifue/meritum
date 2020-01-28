@@ -52,3 +52,13 @@ export interface Slack {
   is_app_user: boolean;
   updated: boolean;
 }
+
+export interface SlackBot {
+  self: {
+    id: string;
+    name: string;
+    created: number;
+    manual_presence: string;
+    bot_id: string;
+  };
+}
