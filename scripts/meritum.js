@@ -64,14 +64,14 @@ module.exports = robot => {
   robot.hear(/^mhelp>$/i, res => {
     res.send(
       '*プロジェクトmeritum* とは、 *めりたん* と称号を集めるプロジェクト。' +
-        '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう！' +
+        '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう。' +
         '他人に迷惑をかけたりしないように！ *めりたん* が消滅します！' +
-        'めりたんbotをランキング100以下にしたら勝利！\n' +
-        '■コマンド説明\n' +
+        'めりたんbotをランキング100以下にしたら勝利。\n' +
+        ':point_down::point_down::point_down::point_down:コマンド説明:point_down::point_down::point_down::point_down:\n' +
         '`mhelp>` : めりたんbotの使い方を表示。\n' +
         '`mlogin>` : ログインボーナスの *100めりたん* をゲット。毎朝7時にリセット。\n' +
         `\`mjanken> (グー|チョキ|パー) (1-${MAX_JANKEN_BET})\` : めりたんbotとめりたんを賭けてジャンケン。\n` +
-        `\`mgacha>\` : *${GACHA_MERITUM}めりたん* でガチャを回して称号をゲット。\n` +
+        `\`mgacha>\` : *${GACHA_MERITUM}めりたん* でガチャを回し、称号をゲット。\n` +
         '`mself>` : 自分のめりたん、称号数、全称号、順位を表示。\n' +
         '`mranking>` : 称号数、次にめりたんで決まるランキングを表示。\n' +
         '`mrank> (@ユーザー名)` : 指定したユーザーのめりたん、称号数、全称号、順位を表示。\n' +
@@ -293,7 +293,7 @@ module.exports = robot => {
             }
           );
           res.send(
-            `ジャンケン！ ${botHand}！...あなたの *勝ち* ですね。 *${bet}めりたん* お支払いします。これで *${account.meritum +
+            `ジャンケン！ ${botHand}！...あなたの *勝ち* ですね。 *${bet}めりたん* お渡しします。これで *${account.meritum +
               bet}めりたん* になりました。`
           );
         }
@@ -395,7 +395,7 @@ module.exports = robot => {
         );
         yield t.commit();
         res.send(
-          `称号 *${title}* を手に入れました！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、 所有めりたんは *${newMeritum}めりたん* となりました。`
+          `称号 *${title}* を手に入れました！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、 *${newMeritum}めりたん* となりました。`
         );
       } catch (e) {
         console.log('Error on mgacha> e:');
@@ -454,7 +454,7 @@ module.exports = robot => {
         yield t.commit();
         const titlesWithAlt = account.titles || 'なし';
         res.send(
-          `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 所有めりたんは *${account.meritum}めりたん* です。`
+          `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 *${account.meritum}めりたん* です。`
         );
       } catch (e) {
         console.log('Error on mself> e:');
@@ -478,13 +478,20 @@ module.exports = robot => {
           limit: 100
         });
         yield t.commit();
-        let message = '■めりたん称号ランキング\n';
+        let message = ':crown:めりたん称号ランキング:crown:\n';
+        let botSlackId = robot.adapter.self.id;
+        let isUserWon = true;
         let rank = 1;
         for (const a of accounts) {
+          if (botSlackId === a.slackId) isUserWon = false;
           let rankName = a.displayName || a.realName;
           rankName = rankName || a.name;
           message += `*第${rank}位* ${rankName} (称号数: ${a.numOfTitles}、めりたん: ${a.meritum})\n`;
           rank++;
+        }
+        if (isUserWon) {
+          message +=
+            '\n:tada:めりたんbotをランキングから排除してユーザー達が勝利しました！:tada:';
         }
         res.send(message);
       } catch (e) {
@@ -534,7 +541,7 @@ module.exports = robot => {
         yield t.commit();
         const titlesWithAlt = account.titles || 'なし';
         res.send(
-          `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 所有めりたんは *${account.meritum}めりたん* です。`
+          `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 *${account.meritum}めりたん* です。`
         );
       } catch (e) {
         console.log('Error on mrank> e:');
@@ -578,6 +585,11 @@ module.exports = robot => {
         const realName = fromUser.real_name;
         const slack = fromUser.slack;
         const displayName = slack.profile.display_name;
+        if (fromSlackId === toSlackId) {
+          res.send('自身へはめりたんを送ることはできません。');
+          yield t.commit();
+          return;
+        }
         let fromAccount = yield accounts_1.Account.findByPk(fromSlackId);
         if (!fromAccount) {
           // アカウントがない場合作る

@@ -40,11 +40,11 @@ module.exports = (robot: Robot<any>) => {
   // ヘルプ表示
   robot.hear(/^mhelp>$/i, (res: Response<Robot<any>>) => {
     res.send(
-      '*プロジェクトmeritum* とは、 *めりたん* と称号を集めるプロジェクト。' +
+      '*プロジェクトmeritum* とは、 *めりたん* と *称号* を集めるプロジェクト。' +
         '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう。' +
         '他人に迷惑をかけたりしないように！ *めりたん* が消滅します！' +
-        'めりたんbotをランキング100以下にしたら勝利。\n' +
-        '■コマンド説明\n' +
+        'めりたんbotをランキング100以下にしたらユーザーたちの勝利。\n' +
+        ':point_down::point_down::point_down::point_down:コマンド説明:point_down::point_down::point_down::point_down:\n' +
         '`mhelp>` : めりたんbotの使い方を表示。\n' +
         '`mlogin>` : ログインボーナスの *100めりたん* をゲット。毎朝7時にリセット。\n' +
         `\`mjanken> (グー|チョキ|パー) (1-${MAX_JANKEN_BET})\` : めりたんbotとめりたんを賭けてジャンケン。\n` +
@@ -482,13 +482,21 @@ module.exports = (robot: Robot<any>) => {
       });
       await t.commit();
 
-      let message = '■めりたん称号ランキング\n';
+      let message = ':crown:めりたん称号ランキング:crown:\n';
+      let botSlackId = (robot.adapter as SlackBot).self.id;
+      let isUserWon = true;
       let rank = 1;
       for (const a of accounts) {
+        if (botSlackId === a.slackId) isUserWon = false;
         let rankName = a.displayName || a.realName;
         rankName = rankName || a.name;
         message += `*第${rank}位* ${rankName} (称号数: ${a.numOfTitles}、めりたん: ${a.meritum})\n`;
         rank++;
+      }
+
+      if (isUserWon) {
+        message +=
+          '\n:tada:めりたんbotをランキングから排除してユーザーたちが勝利しました！:tada:';
       }
 
       res.send(message);
