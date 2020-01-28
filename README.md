@@ -1,3 +1,19 @@
+# プロジェクト meritum
+
+PostgreSQL を使う Slack チャットボットゲーム。`config.js` を設定して、DB を作って、Slack につなげることで遊ぶことができます。
+
+プロジェクト meritum とは、 めりたん と 称号 を集めるプロジェクト。毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう。他人に迷惑をかけたりしないように！ めりたん が消滅します！めりたん bot をランキング 101 以下にしたらユーザーたちの勝利となります。
+
+〜コマンド説明〜
+mhelp> : めりたん bot の使い方を表示。
+mlogin> : ログインボーナスの 100 めりたん をゲット。毎朝 7 時にリセット。
+mjanken> (グー|チョキ|パー) (1-20) : めりたん bot とめりたんを賭けてジャンケン。
+mgacha> : 280 めりたん でガチャを回し、称号をゲット。
+mself> : 自分の順位、称号数、全称号、めりたんを表示。
+mranking> : 称号数で決まるランキングを表示(同称号数なら、めりたんの数順)
+mrank> (@ユーザー名) : 指定したユーザーの順位、称号数、全称号、めりたんを表示。
+msend> (@ユーザー名) (数値) : 指定したユーザーに数値で指定しためりたんを送る
+
 # meritum
 
 meritum is a chat bot built on the [Hubot][hubot] framework. It was
@@ -78,7 +94,6 @@ available hubot plugins on [npmjs.com][npmjs] or by using `npm search`:
     hubot-pandapanda a hubot script for panda responses =missu 2014-11-30 0.9.2   hubot hubot-scripts panda
     ...
 
-
 To use a package, check the package's documentation, but in general it is:
 
 1. Use `npm install --save` to add the package to `package.json` and install it
@@ -95,10 +110,7 @@ the `hubot-fun` plugin, but all four of those in `hubot-auto-deploy`.
 
 ```json
 {
-  "hubot-fun": [
-    "crazy",
-    "thanks"
-  ],
+  "hubot-fun": ["crazy", "thanks"],
   "hubot-auto-deploy": "*"
 }
 ```
@@ -121,7 +133,7 @@ repo.
 
 [hubot-scripts]: https://github.com/github/hubot-scripts
 
-##  Persistence
+## Persistence
 
 If you are going to use the `hubot-redis-brain` package (strongly suggested),
 you will need to add the Redis to Go addon on Heroku which requires a verified
