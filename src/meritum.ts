@@ -74,29 +74,31 @@ module.exports = (robot: Robot<any>) => {
       });
 
       if (countLoginBonus === 1) {
-        res.send(
-          `{@${slackId}>}さんは既に本日のログインボーナスを取得済みです。`
-        );
+        // 取得済み
         await t.commit();
-        return;
+        res.send(
+          `<@${slackId}>さんは既に本日のログインボーナスを取得済みです。`
+        );
       } else {
+        // 付与へ
         // アカウントがない場合には作り、100めりたん付与、ログインボーナス実績を追加
         const oldAccount = await Account.findByPk(slackId);
+        let meritum = 0;
         if (!oldAccount) {
+          meritum += 100;
           await Account.create({
             slackId,
             name,
             realName,
             displayName,
-            meritum: 100,
+            meritum,
             titles: '',
             numOfTitles: 0
           });
         } else {
+          meritum = oldAccount.meritum + 100;
           await Account.update(
-            {
-              meritum: oldAccount.meritum + 100
-            },
+            { meritum },
             {
               where: {
                 slackId: slackId
@@ -110,9 +112,12 @@ module.exports = (robot: Robot<any>) => {
           slackId,
           receiptDate
         });
-      }
 
-      await t.commit();
+        await t.commit();
+        res.send(
+          `<@${slackId}>さんにログインボーナス100めりたんを付与し、 ${meritum}めりたんとなりました。`
+        );
+      }
     } catch (e) {
       console.log('Error on mlogin> e:');
       console.log(e);

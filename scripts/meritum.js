@@ -195,6 +195,7 @@ module.exports = function(robot) {
         receiptDate,
         countLoginBonus,
         oldAccount,
+        meritum,
         e_1;
       var _a;
       return __generator(this, function(_b) {
@@ -226,20 +227,22 @@ module.exports = function(robot) {
           case 3:
             countLoginBonus = _b.sent();
             if (!(countLoginBonus === 1)) return [3 /*break*/, 5];
-            res.send(
-              '{@' +
-                slackId +
-                '>}\u3055\u3093\u306F\u65E2\u306B\u672C\u65E5\u306E\u30ED\u30B0\u30A4\u30F3\u30DC\u30FC\u30CA\u30B9\u3092\u53D6\u5F97\u6E08\u307F\u3067\u3059\u3002'
-            );
             return [4 /*yield*/, t.commit()];
           case 4:
             _b.sent();
-            return [2 /*return*/];
+            res.send(
+              '<@' +
+                slackId +
+                '>\u3055\u3093\u306F\u65E2\u306B\u672C\u65E5\u306E\u30ED\u30B0\u30A4\u30F3\u30DC\u30FC\u30CA\u30B9\u3092\u53D6\u5F97\u6E08\u307F\u3067\u3059\u3002'
+            );
+            return [3 /*break*/, 13];
           case 5:
             return [4 /*yield*/, accounts_1.Account.findByPk(slackId)];
           case 6:
             oldAccount = _b.sent();
+            meritum = 0;
             if (!!oldAccount) return [3 /*break*/, 8];
+            meritum += 100;
             return [
               4 /*yield*/,
               accounts_1.Account.create({
@@ -247,7 +250,7 @@ module.exports = function(robot) {
                 name: name,
                 realName: realName,
                 displayName: displayName,
-                meritum: 100,
+                meritum: meritum,
                 titles: '',
                 numOfTitles: 0
               })
@@ -256,12 +259,11 @@ module.exports = function(robot) {
             _b.sent();
             return [3 /*break*/, 10];
           case 8:
+            meritum = oldAccount.meritum + 100;
             return [
               4 /*yield*/,
               accounts_1.Account.update(
-                {
-                  meritum: oldAccount.meritum + 100
-                },
+                { meritum: meritum },
                 {
                   where: {
                     slackId: slackId
@@ -284,11 +286,18 @@ module.exports = function(robot) {
           case 11:
             // ログインボーナス実績を作成
             _b.sent();
-            _b.label = 12;
-          case 12:
             return [4 /*yield*/, t.commit()];
-          case 13:
+          case 12:
             _b.sent();
+            res.send(
+              '<@' +
+                slackId +
+                '>\u3055\u3093\u306B\u30ED\u30B0\u30A4\u30F3\u30DC\u30FC\u30CA\u30B9100\u3081\u308A\u305F\u3093\u3092\u4ED8\u4E0E\u3057\u3001 ' +
+                meritum +
+                '\u3081\u308A\u305F\u3093\u3068\u306A\u308A\u307E\u3057\u305F\u3002'
+            );
+            _b.label = 13;
+          case 13:
             return [3 /*break*/, 16];
           case 14:
             e_1 = _b.sent();
