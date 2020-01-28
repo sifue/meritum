@@ -1,7 +1,7 @@
 // Description:
 //   毎日ログインボーナスでもらった「めりたん」というポイントを使って遊ぶSlack用チャットボットゲーム
 
-import { Robot, Response, User } from 'hubot';
+import { Robot, Response, Message } from 'hubot';
 import { Sequelize, Op } from 'sequelize';
 import moment from 'moment';
 
@@ -24,6 +24,10 @@ const USER_INITIAL_MERITUM = GACHA_MERITUM + MAX_JANKEN_BET; // ユーザーの�
  */
 function getReceiptToday(): Date {
   return new Date(Date.now() - 1000 * 60 * 60 * 7);
+}
+
+class MessageWithRawText extends Message {
+  rawText?: string;
 }
 
 // DB同期
@@ -97,8 +101,14 @@ module.exports = (robot: Robot<any>) => {
           });
         } else {
           meritum = oldAccount.meritum + LOGIN_BONUS_MERITUN;
+          // ログインボーナス取得時にユーザー名などを更新
           await Account.update(
-            { meritum },
+            {
+              name,
+              realName,
+              displayName,
+              meritum
+            },
             {
               where: {
                 slackId: slackId
@@ -407,13 +417,12 @@ module.exports = (robot: Robot<any>) => {
       let account = await Account.findByPk(slackId);
       if (!account) {
         // アカウントがない場合作る
-        const meritum = 0;
         await Account.create({
           slackId,
           name,
           realName,
           displayName,
-          meritum,
+          meritum: USER_INITIAL_MERITUM,
           titles: '',
           numOfTitles: 0
         });
@@ -446,8 +455,9 @@ module.exports = (robot: Robot<any>) => {
       }
 
       await t.commit();
+      const titlesWithAlt = account.titles || 'なし';
       res.send(
-        `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${account.titles}* 、 所有めりたんは *${account.meritum}めりたん* です。`
+        `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 所有めりたんは *${account.meritum}めりたん* です。`
       );
     } catch (e) {
       console.log('Error on mself> e:');
@@ -484,6 +494,60 @@ module.exports = (robot: Robot<any>) => {
       res.send(message);
     } catch (e) {
       console.log('Error on mranking> e:');
+      console.log(e);
+      await t.rollback();
+    }
+  });
+
+  // 他人のデータ表示
+  robot.hear(/^mrank> (.+)/i, async (res: Response<Robot<any>>) => {
+    const rawText = (res.message as MessageWithRawText).rawText;
+    if (!rawText) {
+      res.send('rawTextが正しく取得でいませんでした。');
+      return;
+    }
+
+    const parsed = rawText.match(/^mrank&gt; <@(.+)>.*/);
+    if (!parsed) {
+      res.send('コマンドの形式が `mrank> (@ユーザー名)` ではありません。');
+      return;
+    }
+
+    const slackId = parsed[1];
+
+    const t = await database.transaction();
+    try {
+      let account = await Account.findByPk(slackId);
+      if (!account) {
+        res.send('指定したユーザーはプロジェクトmeritumをやっていません。');
+        await t.commit();
+        return;
+      }
+
+      const accounts = await Account.findAll({
+        order: [
+          ['numOfTitles', 'DESC'],
+          ['meritum', 'DESC']
+        ],
+        attributes: ['slackId']
+      });
+
+      let rank = 1;
+      for (const a of accounts) {
+        if (a.slackId === slackId) {
+          break;
+        } else {
+          rank++;
+        }
+      }
+
+      await t.commit();
+      const titlesWithAlt = account.titles || 'なし';
+      res.send(
+        `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 所有めりたんは *${account.meritum}めりたん* です。`
+      );
+    } catch (e) {
+      console.log('Error on mrank> e:');
       console.log(e);
       await t.rollback();
     }

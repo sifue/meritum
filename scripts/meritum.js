@@ -35,6 +35,7 @@ var __awaiter =
     });
   };
 Object.defineProperty(exports, '__esModule', { value: true });
+const hubot_1 = require('hubot');
 const sequelize_1 = require('sequelize');
 const sequelizeLoader_1 = require('./models/sequelizeLoader');
 const accounts_1 = require('./models/accounts');
@@ -51,6 +52,7 @@ const USER_INITIAL_MERITUM = GACHA_MERITUM + MAX_JANKEN_BET; // ユーザーの�
 function getReceiptToday() {
   return new Date(Date.now() - 1000 * 60 * 60 * 7);
 }
+class MessageWithRawText extends hubot_1.Message {}
 // DB同期
 (() =>
   __awaiter(void 0, void 0, void 0, function*() {
@@ -61,7 +63,7 @@ module.exports = robot => {
   // ヘルプ表示
   robot.hear(/^mhelp>$/i, res => {
     res.send(
-      'プロジェクトmeritumとは、めりたんを集めるプロジェクト。' +
+      'プロジェクトmeritumとは、めりたんと称号を集めるプロジェクト。' +
         '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう！' +
         '他人に迷惑をかけたりしないように！めりたんが消滅します！' +
         'めりたんbotをランキング100以下にしたら勝利！\n' +
@@ -410,13 +412,12 @@ module.exports = robot => {
         let account = yield accounts_1.Account.findByPk(slackId);
         if (!account) {
           // アカウントがない場合作る
-          const meritum = 0;
           yield accounts_1.Account.create({
             slackId,
             name,
             realName,
             displayName,
-            meritum,
+            meritum: USER_INITIAL_MERITUM,
             titles: '',
             numOfTitles: 0
           });
@@ -445,8 +446,9 @@ module.exports = robot => {
           }
         }
         yield t.commit();
+        const titlesWithAlt = account.titles || 'なし';
         res.send(
-          `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${account.titles}* 、 所有めりたんは *${account.meritum}めりたん* です。`
+          `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 所有めりたんは *${account.meritum}めりたん* です。`
         );
       } catch (e) {
         console.log('Error on mself> e:');
@@ -470,17 +472,66 @@ module.exports = robot => {
           limit: 100
         });
         yield t.commit();
-        let message = '■めりたんランキング\n';
+        let message = '■めりたん称号ランキング\n';
         let rank = 1;
         for (const a of accounts) {
           let rankName = a.displayName || a.realName;
           rankName = rankName || a.name;
-          message += `*第${rank}位* ${rankName} (称号数: ${a.numOfTitles}、めりたん: ${a.meritum}\n`;
+          message += `*第${rank}位* ${rankName} (称号数: ${a.numOfTitles}、めりたん: ${a.meritum})\n`;
           rank++;
         }
         res.send(message);
       } catch (e) {
         console.log('Error on mranking> e:');
+        console.log(e);
+        yield t.rollback();
+      }
+    })
+  );
+  // 他人のデータ表示
+  robot.hear(/^mrank> (.+)/i, res =>
+    __awaiter(void 0, void 0, void 0, function*() {
+      const rawText = res.message.rawText;
+      if (!rawText) {
+        res.send('rawTextが正しく取得でいませんでした。');
+        return;
+      }
+      const parsed = rawText.match(/^mrank&gt; <@(.+)>.*/);
+      if (!parsed) {
+        res.send('コマンドの形式が `mrank> (@ユーザー名)` ではありません。');
+        return;
+      }
+      const slackId = parsed[1];
+      const t = yield sequelizeLoader_1.database.transaction();
+      try {
+        let account = yield accounts_1.Account.findByPk(slackId);
+        if (!account) {
+          res.send('指定したユーザーはプロジェクトmeritumをやっていません。');
+          yield t.commit();
+          return;
+        }
+        const accounts = yield accounts_1.Account.findAll({
+          order: [
+            ['numOfTitles', 'DESC'],
+            ['meritum', 'DESC']
+          ],
+          attributes: ['slackId']
+        });
+        let rank = 1;
+        for (const a of accounts) {
+          if (a.slackId === slackId) {
+            break;
+          } else {
+            rank++;
+          }
+        }
+        yield t.commit();
+        const titlesWithAlt = account.titles || 'なし';
+        res.send(
+          `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 所有めりたんは *${account.meritum}めりたん* です。`
+        );
+      } catch (e) {
+        console.log('Error on mrank> e:');
         console.log(e);
         yield t.rollback();
       }
