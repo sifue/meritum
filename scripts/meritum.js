@@ -65,8 +65,8 @@ module.exports = robot => {
     res.send(
       '*プロジェクトmeritum* とは、 *めりたん* と *称号* を集めるプロジェクト。' +
         '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう。' +
-        '他人に迷惑をかけたりしないように！ *めりたん* が消滅します！' +
-        'めりたんbotをランキング101以下にしたらユーザーたちの勝利となります。\n' +
+        '他人に迷惑をかける行為はしないでね。 *めりたん* が消滅します！' +
+        'めりたんbotをランキング101位以下にしたらユーザーたちの勝利です。\n' +
         ':point_down::point_down::point_down::point_down: *〜コマンド説明〜* :point_down::point_down::point_down::point_down:\n' +
         '`mhelp>` : めりたんbotの使い方を表示。\n' +
         '`mlogin>` : ログインボーナスの *100めりたん* をゲット。毎朝7時にリセット。\n' +
@@ -102,7 +102,7 @@ module.exports = robot => {
           // 取得済み
           yield t.commit();
           res.send(
-            `<@${slackId}>さんは、既に本日のログインボーナスを取得済みです。`
+            `<@${slackId}>さんは、既に今日のログインボーナスをゲット済みだよ。`
           );
         } else {
           // 付与へ
@@ -144,7 +144,7 @@ module.exports = robot => {
           });
           yield t.commit();
           res.send(
-            `<@${slackId}>さんにログインボーナスとして *${LOGIN_BONUS_MERITUN}めりたん* を付与し、 *${meritum}めりたん* となりました。`
+            `<@${slackId}>さんに、ログインボーナスとして *${LOGIN_BONUS_MERITUN}めりたん* をプレゼント。これで *${meritum}めりたん* となったよ。`
           );
         }
       } catch (e) {
@@ -168,13 +168,13 @@ module.exports = robot => {
       const bet = parseInt(res.match[2]);
       if (bet > MAX_JANKEN_BET) {
         res.send(
-          `*${MAX_JANKEN_BET}めりたん* 以上をかけてジャンケンすることは禁止されています。`
+          `*${MAX_JANKEN_BET}めりたん* 以上をかけてジャンケンすることは禁止されているよ。`
         );
         return;
       }
       if (bet <= 0) {
         res.send(
-          '*1めりたん* より小さな数の *めりたん* をかけることはできません。'
+          '*1めりたん* より小さな数の *めりたん* をかけることはできないよ。'
         );
         return;
       }
@@ -197,15 +197,15 @@ module.exports = robot => {
         } else if (botAccount.meritum < bet) {
           // ベット分持っていない場合、終了
           res.send(
-            `<@${slackBot.self.id}>は *${bet}めりたん* を所有していないためジャンケンできません。`
+            `<@${slackBot.self.id}>は *${bet}めりたん* をもっていないよ。`
           );
           yield t.commit();
           return;
         }
         // ボットアカウントがない場合に作成してもまだないなら終了
         if (!botAccount) {
-          res.send('ボットアカウントを作成することができませんでした。');
-          console.log('ボットアカウントを作成することができませんでした。');
+          res.send('ボットアカウントを作成することができなかってみたい。');
+          console.log('ボットアカウントを作成することができなかってみたい。');
           yield t.commit();
           return;
         }
@@ -227,15 +227,15 @@ module.exports = robot => {
         } else if (account.meritum < bet) {
           // ベット分持っていない場合、終了
           res.send(
-            `<@${slackId}>は *${bet}めりたん* を所有していないためジャンケンできません。`
+            `<@${slackId}>は *${bet}めりたん* がないからジャンケンできないよ。`
           );
           yield t.commit();
           return;
         }
         // アカウントがない場合に作成してもまだないなら終了
         if (!account) {
-          res.send('アカウントを作成することができませんでした。');
-          console.log('アカウントを作成することができませんでした。');
+          res.send('アカウントを作成することができなかったみたい。');
+          console.log('アカウントを作成することができなかったみたい。');
           yield t.commit();
           return;
         }
@@ -243,7 +243,7 @@ module.exports = robot => {
         const botHand = botHands[Math.floor(Math.random() * botHands.length)];
         if (botHand === hand) {
           res.send(
-            `ジャンケン！ ${botHand}！... *あいこ* ですね。またの機会に。`
+            `ジャンケン！ ${botHand}！... *あいこ* だね。またの機会にね。`
           );
           yield t.commit();
           return;
@@ -271,8 +271,8 @@ module.exports = robot => {
             }
           );
           res.send(
-            `ジャンケン！ ${botHand}！...あなたの *負け* ですね。 *${bet}めりたん* 頂きます。これで *${account.meritum -
-              bet}めりたん* になりました。`
+            `ジャンケン！ ${botHand}！...きみの *負け* だよ。 *${bet}めりたん* もらうね。これで *${account.meritum -
+              bet}めりたん* になったよ。`
           );
         } else {
           // 勝ち処理
@@ -293,8 +293,8 @@ module.exports = robot => {
             }
           );
           res.send(
-            `ジャンケン！ ${botHand}！...あなたの *勝ち* ですね。 *${bet}めりたん* お渡しします。これで *${account.meritum +
-              bet}めりたん* になりました。`
+            `ジャンケン！ ${botHand}！...きみの *勝ち* だよ。 *${bet}めりたん* をあげるね。これで *${account.meritum +
+              bet}めりたん* になったよ。`
           );
         }
         yield t.commit();
@@ -333,15 +333,15 @@ module.exports = robot => {
         } else if (account.meritum < GACHA_MERITUM) {
           // ガチャ費用を持っていない場合、終了
           res.send(
-            `<@${slackId}>は、ガチャ費用 *${GACHA_MERITUM}めりたん* を所有していないためガチャできません。`
+            `<@${slackId}>は、ガチャ費用の *${GACHA_MERITUM}めりたん* がないからガチャできないよ。`
           );
           yield t.commit();
           return;
         }
         // アカウントがない場合に作成してもまだないなら終了
         if (!account) {
-          res.send('アカウントを作成することができませんでした。');
-          console.log('アカウントを作成することができませんでした。');
+          res.send('アカウントを作成することができないみたい。');
+          console.log('アカウントを作成することができないみたい。');
           yield t.commit();
           return;
         }
@@ -393,7 +393,7 @@ module.exports = robot => {
           }
         );
         res.send(
-          `称号 *${title}* を手に入れました！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、残り *${newMeritum}めりたん* となりました。`
+          `称号 *${title}* を手に入れたよ！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、残り *${newMeritum}めりたん* となったよ。`
         );
         // 既に持っている称号の場合は、5分の1の確率でめりたんbotに引き取られる
         if (account.titles.includes(title) && Math.random() > 0.8) {
@@ -419,7 +419,7 @@ module.exports = robot => {
             }
           );
           res.send(
-            `なお称号 *${title}* は既に持っていたため、めりたんbotが引き取ることになりました。 めりたんbotの称号数は *${newBotTitlesStr.length}個* 、全称号は *${newBotTitlesStr}* 、 *${botAccount.meritum}めりたん* となりました。`
+            `称号 *${title}* はもうあるみたいだから、めりたんbotがもらっちゃうね。 めりたんbotの称号数は *${newBotTitlesStr.length}個* 、全称号は *${newBotTitlesStr}* 、 *${botAccount.meritum}めりたん* となったよ。`
           );
         }
         yield t.commit();
@@ -457,8 +457,8 @@ module.exports = robot => {
         }
         // アカウントがない場合に作成してもまだないなら終了
         if (!account) {
-          res.send('アカウントを作成することができませんでした。');
-          console.log('アカウントを作成することができませんでした。');
+          res.send('アカウントを作成することができないみたい。');
+          console.log('アカウントを作成することができないみたい。');
           yield t.commit();
           return;
         }
@@ -480,7 +480,7 @@ module.exports = robot => {
         yield t.commit();
         const titlesWithAlt = account.titles || 'なし';
         res.send(
-          `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 *${account.meritum}めりたん* です。`
+          `きみの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 *${account.meritum}めりたん* だよ。`
         );
       } catch (e) {
         console.log('Error on mself> e:');
@@ -517,7 +517,7 @@ module.exports = robot => {
         }
         if (isUserWon) {
           message +=
-            '\n:tada:めりたんbotをランキングから排除してユーザーたちが勝利しました！:tada:';
+            '\n:tada:めりたんbotをランキングから排除し、ユーザーたちが勝利しました！:tada:';
         }
         res.send(message);
       } catch (e) {
@@ -532,12 +532,12 @@ module.exports = robot => {
     __awaiter(void 0, void 0, void 0, function*() {
       const rawText = res.message.rawText;
       if (!rawText) {
-        res.send('rawTextが正しく取得でいませんでした。');
+        res.send('rawTextが正しく取得でいないみたい。');
         return;
       }
       const parsed = rawText.match(/^mrank&gt; <@(.+)>.*/);
       if (!parsed) {
-        res.send('コマンドの形式が `mrank> (@ユーザー名)` ではありません。');
+        res.send('コマンドの形式が `mrank> (@ユーザー名)` になってないね。');
         return;
       }
       const slackId = parsed[1];
@@ -545,7 +545,7 @@ module.exports = robot => {
       try {
         let account = yield accounts_1.Account.findByPk(slackId);
         if (!account) {
-          res.send('指定したユーザーはプロジェクトmeritumをやっていません。');
+          res.send('このユーザーはプロジェクトmeritumをやってないみたい。');
           yield t.commit();
           return;
         }
@@ -567,7 +567,7 @@ module.exports = robot => {
         yield t.commit();
         const titlesWithAlt = account.titles || 'なし';
         res.send(
-          `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 *${account.meritum}めりたん* です。`
+          `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 *${account.meritum}めりたん* だよ。`
         );
       } catch (e) {
         console.log('Error on mrank> e:');
@@ -581,27 +581,27 @@ module.exports = robot => {
     __awaiter(void 0, void 0, void 0, function*() {
       const rawText = res.message.rawText;
       if (!rawText) {
-        res.send('rawTextが正しく取得でいませんでした。');
+        res.send('rawTextが正しく取得でいないみたい。');
         return;
       }
       const parsed = rawText.match(/^msend&gt; <@(.+)> (\d+)/);
       if (!parsed) {
         res.send(
-          'コマンドの形式が `msend> (@ユーザー名) (数値)` ではありません。'
+          'コマンドの形式が `msend> (@ユーザー名) (数値)` ではないみたい。'
         );
         return;
       }
       const toSlackId = parsed[1];
       const sendMeritum = parseInt(parsed[2]);
       if (sendMeritum <= 0) {
-        res.send('0以下のめりたんを送ることはできません。');
+        res.send('0以下のめりたんを送ることはできないよ。');
         return;
       }
       const t = yield sequelizeLoader_1.database.transaction();
       try {
         let toAccount = yield accounts_1.Account.findByPk(toSlackId);
         if (!toAccount) {
-          res.send('指定したユーザーはプロジェクトmeritumをやっていません。');
+          res.send('指定したユーザーはプロジェクトmeritumをやってないみたい。');
           yield t.commit();
           return;
         }
@@ -612,7 +612,7 @@ module.exports = robot => {
         const slack = fromUser.slack;
         const displayName = slack.profile.display_name;
         if (fromSlackId === toSlackId) {
-          res.send('自身へはめりたんを送ることはできません。');
+          res.send('自身へはめりたんを送ることはできないよ。');
           yield t.commit();
           return;
         }
@@ -632,15 +632,15 @@ module.exports = robot => {
         }
         // アカウントがない場合に作成してもまだないなら終了
         if (!fromAccount) {
-          res.send('アカウントを作成することができませんでした。');
-          console.log('アカウントを作成することができませんでした。');
+          res.send('アカウントを作成することができないみたい。');
+          console.log('アカウントを作成することができないみたい。');
           yield t.commit();
           return;
         }
         if (fromAccount.meritum < sendMeritum) {
           // 送るめりたんを持っていない場合、終了
           res.send(
-            `<@${fromSlackId}>は、送るための *${sendMeritum}めりたん* を所有していません。`
+            `<@${fromSlackId}>は、送るための *${sendMeritum}めりたん* をもってないみたいだよ。`
           );
           yield t.commit();
           return;
@@ -663,9 +663,9 @@ module.exports = robot => {
           }
         );
         res.send(
-          `<@${fromSlackId}> から  <@${toSlackId}> に *${sendMeritum}めりたん* を送り、<@${fromSlackId}> は *${fromAccount.meritum -
+          `<@${fromSlackId}> から  <@${toSlackId}> に *${sendMeritum}めりたん* を送って、<@${fromSlackId}> は *${fromAccount.meritum -
             sendMeritum}めりたん* に、 <@${toSlackId}> は *${toAccount.meritum +
-            sendMeritum}めりたん* になりました。`
+            sendMeritum}めりたん* になったよ。`
         );
       } catch (e) {
         console.log('Error on msend> e:');
