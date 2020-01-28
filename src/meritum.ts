@@ -43,8 +43,8 @@ module.exports = (robot: Robot<any>) => {
       '*プロジェクトmeritum* とは、 *めりたん* と *称号* を集めるプロジェクト。' +
         '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう。' +
         '他人に迷惑をかけたりしないように！ *めりたん* が消滅します！' +
-        'めりたんbotをランキング100以下にしたらユーザーたちの勝利。\n' +
-        ':point_down::point_down::point_down::point_down:コマンド説明:point_down::point_down::point_down::point_down:\n' +
+        'めりたんbotをランキング101以下にしたらユーザーたちの勝利となります。\n' +
+        ':point_down::point_down::point_down::point_down: *〜コマンド説明〜* :point_down::point_down::point_down::point_down:\n' +
         '`mhelp>` : めりたんbotの使い方を表示。\n' +
         '`mlogin>` : ログインボーナスの *100めりたん* をゲット。毎朝7時にリセット。\n' +
         `\`mjanken> (グー|チョキ|パー) (1-${MAX_JANKEN_BET})\` : めりたんbotとめりたんを賭けてジャンケン。\n` +
