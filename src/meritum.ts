@@ -234,7 +234,7 @@ module.exports = (robot: Robot<any>) => {
 
         if (botHand === hand) {
           res.send(
-            `ジャンケン！ ${botHand}！... *あいこ* だね。またのチャレンジしてね。`
+            `ジャンケン！ ${botHand}！... *あいこ* だね。またチャレンジしてね。`
           );
           await t.commit();
           return;

@@ -243,7 +243,7 @@ module.exports = robot => {
         const botHand = botHands[Math.floor(Math.random() * botHands.length)];
         if (botHand === hand) {
           res.send(
-            `ジャンケン！ ${botHand}！... *あいこ* だね。またのチャレンジしてね。`
+            `ジャンケン！ ${botHand}！... *あいこ* だね。またチャレンジしてね。`
           );
           yield t.commit();
           return;
