@@ -66,9 +66,9 @@ module.exports = robot => {
         'めりたんbotをランキング100以下にしたら勝利！\n' +
         '■コマンド説明\n' +
         '`mhelp>` : めりたんbotの使い方を表示。\n' +
-        '`mlogin>` : ログインボーナスの100めりたんをゲット。毎朝7時にリセット。\n' +
+        '`mlogin>` : ログインボーナスの *100めりたん* をゲット。毎朝7時にリセット。\n' +
         '`mjanken> (グー|チョキ|パー) (1-9)` : めりたんbotと数値で指定しためりたんを賭けてジャンケン。\n' +
-        '`mgacha>` : 80めりたんでガチャを回して称号をゲット。\n' +
+        '`mgacha>` : *80めりたん* でガチャを回して称号をゲット。\n' +
         '`mself>` : 自分のめりたん、称号数、全称号、順位を表示。\n' +
         '`mranking>` : 称号数、次にめりたんで決まるランキングを表示。\n' +
         '`mrank> (@ユーザー名)` : 指定したユーザーのめりたん、称号数、全称号、順位を表示。\n' +
@@ -380,6 +380,64 @@ module.exports = robot => {
         yield t.commit();
         res.send(
           `称号 *${title}* を手に入れました！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、 所有めりたんは *${newMeritum}めりたん* となりました。`
+        );
+      } catch (e) {
+        console.log('Error on mgacha> e:');
+        console.log(e);
+        yield t.rollback();
+      }
+    })
+  );
+  // 自分のデータ表示
+  robot.hear(/^mself>$/i, res =>
+    __awaiter(void 0, void 0, void 0, function*() {
+      const user = res.message.user;
+      const slackId = user.id;
+      const name = user.name;
+      const realName = user.real_name;
+      const slack = user.slack;
+      const displayName = slack.profile.display_name;
+      const t = yield sequelizeLoader_1.database.transaction();
+      try {
+        let account = yield accounts_1.Account.findByPk(slackId);
+        if (!account) {
+          // アカウントがない場合作る
+          const meritum = 0;
+          yield accounts_1.Account.create({
+            slackId,
+            name,
+            realName,
+            displayName,
+            meritum,
+            titles: '',
+            numOfTitles: 0
+          });
+          account = yield accounts_1.Account.findByPk(slackId);
+        }
+        // アカウントがない場合に作成してもまだないなら終了
+        if (!account) {
+          console.log('アカウントを作成することができませんでした。');
+          yield t.commit();
+          return;
+        }
+        const accounts = yield accounts_1.Account.findAll({
+          order: [
+            ['numOfTitles', 'DESC'],
+            ['meritum', 'DESC']
+          ],
+          attributes: ['slackId']
+        });
+        let rank = 1;
+        for (const a of accounts) {
+          if (a.slackId === slackId) {
+            break;
+          } else {
+            rank++;
+          }
+        }
+        yield t.commit();
+        res.send(
+          `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${account.titles}* 、 所有めりたんは *${account.meritum}めりたん* です。`
         );
       } catch (e) {
         console.log('Error on mgacha> e:');
