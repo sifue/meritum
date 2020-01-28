@@ -40,15 +40,15 @@ module.exports = (robot: Robot<any>) => {
   // ヘルプ表示
   robot.hear(/^mhelp>$/i, (res: Response<Robot<any>>) => {
     res.send(
-      'プロジェクトmeritumとは、めりたんと称号を集めるプロジェクト。' +
-        '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう！' +
-        '他人に迷惑をかけたりしないように！めりたんが消滅します！' +
-        'めりたんbotをランキング100以下にしたら勝利！\n' +
+      '*プロジェクトmeritum* とは、 *めりたん* と称号を集めるプロジェクト。' +
+        '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう。' +
+        '他人に迷惑をかけたりしないように！ *めりたん* が消滅します！' +
+        'めりたんbotをランキング100以下にしたら勝利。\n' +
         '■コマンド説明\n' +
         '`mhelp>` : めりたんbotの使い方を表示。\n' +
         '`mlogin>` : ログインボーナスの *100めりたん* をゲット。毎朝7時にリセット。\n' +
         `\`mjanken> (グー|チョキ|パー) (1-${MAX_JANKEN_BET})\` : めりたんbotとめりたんを賭けてジャンケン。\n` +
-        `\`mgacha>\` : *${GACHA_MERITUM}めりたん* でガチャを回して称号をゲット。\n` +
+        `\`mgacha>\` : *${GACHA_MERITUM}めりたん* でガチャを回し、称号をゲット。\n` +
         '`mself>` : 自分のめりたん、称号数、全称号、順位を表示。\n' +
         '`mranking>` : 称号数、次にめりたんで決まるランキングを表示。\n' +
         '`mrank> (@ユーザー名)` : 指定したユーザーのめりたん、称号数、全称号、順位を表示。\n' +
@@ -89,13 +89,13 @@ module.exports = (robot: Robot<any>) => {
         const oldAccount = await Account.findByPk(slackId);
         let meritum = 0;
         if (!oldAccount) {
-          meritum = LOGIN_BONUS_MERITUN;
+          meritum = LOGIN_BONUS_MERITUN + USER_INITIAL_MERITUM;
           await Account.create({
             slackId,
             name,
             realName,
             displayName,
-            meritum: USER_INITIAL_MERITUM,
+            meritum,
             titles: '',
             numOfTitles: 0
           });
@@ -286,7 +286,7 @@ module.exports = (robot: Robot<any>) => {
             }
           );
           res.send(
-            `ジャンケン！ ${botHand}！...あなたの *勝ち* ですね。 *${bet}めりたん* お支払いします。これで *${account.meritum +
+            `ジャンケン！ ${botHand}！...あなたの *勝ち* ですね。 *${bet}めりたん* お渡しします。これで *${account.meritum +
               bet}めりたん* になりました。`
           );
         }
@@ -394,7 +394,7 @@ module.exports = (robot: Robot<any>) => {
 
       await t.commit();
       res.send(
-        `称号 *${title}* を手に入れました！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、 所有めりたんは *${newMeritum}めりたん* となりました。`
+        `称号 *${title}* を手に入れました！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、 *${newMeritum}めりたん* となりました。`
       );
     } catch (e) {
       console.log('Error on mgacha> e:');
@@ -457,7 +457,7 @@ module.exports = (robot: Robot<any>) => {
       await t.commit();
       const titlesWithAlt = account.titles || 'なし';
       res.send(
-        `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 所有めりたんは *${account.meritum}めりたん* です。`
+        `あなたの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 *${account.meritum}めりたん* です。`
       );
     } catch (e) {
       console.log('Error on mself> e:');
@@ -544,10 +544,119 @@ module.exports = (robot: Robot<any>) => {
       await t.commit();
       const titlesWithAlt = account.titles || 'なし';
       res.send(
-        `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 所有めりたんは *${account.meritum}めりたん* です。`
+        `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、 *${account.meritum}めりたん* です。`
       );
     } catch (e) {
       console.log('Error on mrank> e:');
+      console.log(e);
+      await t.rollback();
+    }
+  });
+
+  // 他人にめりたんを送る
+  robot.hear(/^msend> (.+) (\d+)/i, async (res: Response<Robot<any>>) => {
+    const rawText = (res.message as MessageWithRawText).rawText;
+    if (!rawText) {
+      res.send('rawTextが正しく取得でいませんでした。');
+      return;
+    }
+
+    const parsed = rawText.match(/^msend&gt; <@(.+)> (\d+)/);
+    if (!parsed) {
+      res.send(
+        'コマンドの形式が `msend> (@ユーザー名) (数値)` ではありません。'
+      );
+      return;
+    }
+
+    const toSlackId = parsed[1];
+    const sendMeritum = parseInt(parsed[2]);
+
+    if (sendMeritum <= 0) {
+      res.send('0以下のめりたんを送ることはできません。');
+      return;
+    }
+
+    const t = await database.transaction();
+    try {
+      let toAccount = await Account.findByPk(toSlackId);
+      if (!toAccount) {
+        res.send('指定したユーザーはプロジェクトmeritumをやっていません。');
+        await t.commit();
+        return;
+      }
+
+      const fromUser = res.message.user;
+      const fromSlackId = fromUser.id;
+      const name = fromUser.name;
+      const realName = fromUser.real_name;
+      const slack = fromUser.slack as Slack;
+      const displayName = slack.profile.display_name;
+
+      if (fromSlackId === toSlackId) {
+        res.send('自身へはめりたんを送ることはできません。');
+        await t.commit();
+        return;
+      }
+
+      let fromAccount = await Account.findByPk(fromSlackId);
+
+      if (!fromAccount) {
+        // アカウントがない場合作る
+        await Account.create({
+          fromSlackId,
+          name,
+          realName,
+          displayName,
+          meritum: USER_INITIAL_MERITUM,
+          titles: '',
+          numOfTitles: 0
+        });
+        fromAccount = await Account.findByPk(fromSlackId);
+      }
+
+      // アカウントがない場合に作成してもまだないなら終了
+      if (!fromAccount) {
+        res.send('アカウントを作成することができませんでした。');
+        console.log('アカウントを作成することができませんでした。');
+        await t.commit();
+        return;
+      }
+
+      if (fromAccount.meritum < sendMeritum) {
+        // 送るめりたんを持っていない場合、終了
+        res.send(
+          `<@${fromSlackId}>は、送るための *${sendMeritum}めりたん* を所有していません。`
+        );
+        await t.commit();
+        return;
+      }
+
+      // 送付処理
+      await Account.update(
+        { meritum: fromAccount.meritum - sendMeritum },
+        {
+          where: {
+            slackId: fromSlackId
+          }
+        }
+      );
+      await Account.update(
+        { meritum: toAccount.meritum + sendMeritum },
+        {
+          where: {
+            slackId: toSlackId
+          }
+        }
+      );
+
+      res.send(
+        `<@${fromSlackId}> から  <@${toSlackId}> に *${sendMeritum}めりたん* を送り、<@${fromSlackId}> は *${fromAccount.meritum -
+          sendMeritum}めりたん* に、 <@${toSlackId}> は *${toAccount.meritum +
+          sendMeritum}めりたん* になりました。`
+      );
+    } catch (e) {
+      console.log('Error on msend> e:');
       console.log(e);
       await t.rollback();
     }

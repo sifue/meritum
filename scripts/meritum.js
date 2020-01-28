@@ -63,9 +63,9 @@ module.exports = robot => {
   // ヘルプ表示
   robot.hear(/^mhelp>$/i, res => {
     res.send(
-      'プロジェクトmeritumとは、めりたんと称号を集めるプロジェクト。' +
+      '*プロジェクトmeritum* とは、 *めりたん* と称号を集めるプロジェクト。' +
         '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう！' +
-        '他人に迷惑をかけたりしないように！めりたんが消滅します！' +
+        '他人に迷惑をかけたりしないように！ *めりたん* が消滅します！' +
         'めりたんbotをランキング100以下にしたら勝利！\n' +
         '■コマンド説明\n' +
         '`mhelp>` : めりたんbotの使い方を表示。\n' +
@@ -110,20 +110,26 @@ module.exports = robot => {
           const oldAccount = yield accounts_1.Account.findByPk(slackId);
           let meritum = 0;
           if (!oldAccount) {
-            meritum = LOGIN_BONUS_MERITUN;
+            meritum = LOGIN_BONUS_MERITUN + USER_INITIAL_MERITUM;
             yield accounts_1.Account.create({
               slackId,
               name,
               realName,
               displayName,
-              meritum: USER_INITIAL_MERITUM,
+              meritum,
               titles: '',
               numOfTitles: 0
             });
           } else {
             meritum = oldAccount.meritum + LOGIN_BONUS_MERITUN;
+            // ログインボーナス取得時にユーザー名などを更新
             yield accounts_1.Account.update(
-              { meritum },
+              {
+                name,
+                realName,
+                displayName,
+                meritum
+              },
               {
                 where: {
                   slackId: slackId
@@ -532,6 +538,99 @@ module.exports = robot => {
         );
       } catch (e) {
         console.log('Error on mrank> e:');
+        console.log(e);
+        yield t.rollback();
+      }
+    })
+  );
+  // 他人にめりたんを送る
+  robot.hear(/^msend> (.+) (\d+)/i, res =>
+    __awaiter(void 0, void 0, void 0, function*() {
+      const rawText = res.message.rawText;
+      if (!rawText) {
+        res.send('rawTextが正しく取得でいませんでした。');
+        return;
+      }
+      const parsed = rawText.match(/^msend&gt; <@(.+)> (\d+)/);
+      if (!parsed) {
+        res.send(
+          'コマンドの形式が `msend> (@ユーザー名) (数値)` ではありません。'
+        );
+        return;
+      }
+      const toSlackId = parsed[1];
+      const sendMeritum = parseInt(parsed[2]);
+      if (sendMeritum <= 0) {
+        res.send('0以下のめりたんを送ることはできません。');
+        return;
+      }
+      const t = yield sequelizeLoader_1.database.transaction();
+      try {
+        let toAccount = yield accounts_1.Account.findByPk(toSlackId);
+        if (!toAccount) {
+          res.send('指定したユーザーはプロジェクトmeritumをやっていません。');
+          yield t.commit();
+          return;
+        }
+        const fromUser = res.message.user;
+        const fromSlackId = fromUser.id;
+        const name = fromUser.name;
+        const realName = fromUser.real_name;
+        const slack = fromUser.slack;
+        const displayName = slack.profile.display_name;
+        let fromAccount = yield accounts_1.Account.findByPk(fromSlackId);
+        if (!fromAccount) {
+          // アカウントがない場合作る
+          yield accounts_1.Account.create({
+            fromSlackId,
+            name,
+            realName,
+            displayName,
+            meritum: USER_INITIAL_MERITUM,
+            titles: '',
+            numOfTitles: 0
+          });
+          fromAccount = yield accounts_1.Account.findByPk(fromSlackId);
+        }
+        // アカウントがない場合に作成してもまだないなら終了
+        if (!fromAccount) {
+          res.send('アカウントを作成することができませんでした。');
+          console.log('アカウントを作成することができませんでした。');
+          yield t.commit();
+          return;
+        }
+        if (fromAccount.meritum < sendMeritum) {
+          // 送るめりたんを持っていない場合、終了
+          res.send(
+            `<@${fromSlackId}>は、送るための *${sendMeritum}めりたん* を所有していません。`
+          );
+          yield t.commit();
+          return;
+        }
+        // 送付処理
+        yield accounts_1.Account.update(
+          { meritum: fromAccount.meritum - sendMeritum },
+          {
+            where: {
+              slackId: fromSlackId
+            }
+          }
+        );
+        yield accounts_1.Account.update(
+          { meritum: toAccount.meritum + sendMeritum },
+          {
+            where: {
+              slackId: toSlackId
+            }
+          }
+        );
+        res.send(
+          `<@${fromSlackId}> から  <@${toSlackId}> に *${sendMeritum}めりたん* を送り、<@${fromSlackId}> は *${fromAccount.meritum -
+            sendMeritum}めりたん* に、 <@${toSlackId}> は *${toAccount.meritum +
+            sendMeritum}めりたん* になりました。`
+        );
+      } catch (e) {
+        console.log('Error on msend> e:');
         console.log(e);
         yield t.rollback();
       }
