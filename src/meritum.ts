@@ -10,7 +10,7 @@ import { database } from './models/sequelizeLoader';
 import { Account } from './models/accounts';
 import { LoginBonus } from './models/loginBonuses';
 
-import { Slack } from './slack';
+import { Slack } from './types/meritum';
 
 /**
  * ログインボーナス受領日を取得する、午前7時に変わるため、7時間前の時刻を返す
@@ -26,29 +26,23 @@ function getReceiptToday(): Date {
   await LoginBonus.sync();
 })();
 
-interface ResponseEnv<R> extends Response<R> {
-  envelope: {
-    room: string;
-  };
-}
-
 module.exports = (robot: Robot<any>) => {
   // ヘルプ表示
   robot.hear(/^mhelp>$/i, (res: Response<Robot<any>>) => {
     res.send(
       'プロジェクトmeritumとは、めりたんを集めるプロジェクト。' +
-        '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう！' +
-        '他人に迷惑をかけたりしないように！めりたんが消滅します！' +
-        'めりたんbotをランキング100以下にしたら勝利！\n' +
-        '■コマンド説明\n' +
-        '`mhelp>` : めりたんbotの使い方を表示。\n' +
-        '`mlogin>` : ログインボーナスの100めりたんをゲット。毎朝7時にリセット。\n' +
-        '`mjanken> (1-10) (グー|チョキ|パー)` : めりたんbotと数値で指定しためりたんを賭けてジャンケン。\n' +
-        '`mgacha>` : 80めりたんでガチャを回して称号をゲット。\n' +
-        '`mself>` : 自分のめりたん、称号数、全称号、順位を表示。\n' +
-        '`mranking>` : 称号数、次にめりたんで決まるランキングを表示。\n' +
-        '`mrank> (@ユーザー名)` : 指定したユーザーのめりたん、称号数、全称号、順位を表示。\n' +
-        '`msend> (数値) (@ユーザー名)` : 指定したユーザーに数値で指定しためりたんを送る'
+      '毎日のログインボーナスを集めて、ガチャを回し、称号を集めよう！' +
+      '他人に迷惑をかけたりしないように！めりたんが消滅します！' +
+      'めりたんbotをランキング100以下にしたら勝利！\n' +
+      '■コマンド説明\n' +
+      '`mhelp>` : めりたんbotの使い方を表示。\n' +
+      '`mlogin>` : ログインボーナスの100めりたんをゲット。毎朝7時にリセット。\n' +
+      '`mjanken> (1-10) (グー|チョキ|パー)` : めりたんbotと数値で指定しためりたんを賭けてジャンケン。\n' +
+      '`mgacha>` : 80めりたんでガチャを回して称号をゲット。\n' +
+      '`mself>` : 自分のめりたん、称号数、全称号、順位を表示。\n' +
+      '`mranking>` : 称号数、次にめりたんで決まるランキングを表示。\n' +
+      '`mrank> (@ユーザー名)` : 指定したユーザーのめりたん、称号数、全称号、順位を表示。\n' +
+      '`msend> (数値) (@ユーザー名)` : 指定したユーザーに数値で指定しためりたんを送る'
     );
   });
 
@@ -77,7 +71,7 @@ module.exports = (robot: Robot<any>) => {
         // 取得済み
         await t.commit();
         res.send(
-          `<@${slackId}>さんは既に本日のログインボーナスを取得済みです。`
+          `<@${slackId}>さんは、既に本日のログインボーナスを取得済みです。`
         );
       } else {
         // 付与へ
@@ -115,7 +109,7 @@ module.exports = (robot: Robot<any>) => {
 
         await t.commit();
         res.send(
-          `<@${slackId}>さんにログインボーナス100めりたんを付与し、 ${meritum}めりたんとなりました。`
+          `<@${slackId}>さんにログインボーナスとして100めりたんを付与し、 ${meritum}めりたんとなりました。`
         );
       }
     } catch (e) {

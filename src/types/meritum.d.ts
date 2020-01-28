@@ -1,3 +1,11 @@
+import { Robot, Response, User } from 'hubot';
+
+export interface ResponseEnv<R> extends Response<R> {
+  envelope: {
+    room: string;
+  };
+}
+
 export interface Slack {
   id: string;
   team_id: string;

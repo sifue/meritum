@@ -3,6 +3,7 @@ import { Sequelize, Model, DataTypes, BuildOptions } from 'sequelize';
 import sequelize = require('sequelize');
 
 export class Account extends Model {
+
   public slackId!: string;
   public name!: string;
   public realName!: string;
