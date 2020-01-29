@@ -359,7 +359,7 @@ module.exports = (robot: Robot<any>) => {
         'O',
         'P',
         'Q',
-        'L',
+        'R',
         'S',
         'T',
         'U',

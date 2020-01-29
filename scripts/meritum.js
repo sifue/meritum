@@ -363,7 +363,7 @@ module.exports = robot => {
           'O',
           'P',
           'Q',
-          'L',
+          'R',
           'S',
           'T',
           'U',
