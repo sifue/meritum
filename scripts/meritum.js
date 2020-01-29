@@ -102,7 +102,7 @@ module.exports = robot => {
           // 取得済み
           yield t.commit();
           res.send(
-            `<@${slackId}>さんは、既に今日のログインボーナスをゲット済みだよ。`
+            `<@${slackId}>ちゃんは、既に今日のログインボーナスをゲット済みだよ。`
           );
         } else {
           // 付与へ
@@ -144,7 +144,7 @@ module.exports = robot => {
           });
           yield t.commit();
           res.send(
-            `<@${slackId}>さんに、ログインボーナスとして *${LOGIN_BONUS_MERITUN}めりたん* をプレゼント。これで *${meritum}めりたん* となったよ。`
+            `<@${slackId}>ちゃんに、ログインボーナスとして *${LOGIN_BONUS_MERITUN}めりたん* をプレゼント。これで *${meritum}めりたん* になったよ。`
           );
         }
       } catch (e) {
@@ -271,7 +271,7 @@ module.exports = robot => {
             }
           );
           res.send(
-            `ジャンケン！ ${botHand}！...きみの *負け* だよ。 *${bet}めりたん* もらうね。これで *${account.meritum -
+            `ジャンケン！ ${botHand}！...<@${slackId}>ちゃんの *負け* だよ。 *${bet}めりたん* もらうね。これで *${account.meritum -
               bet}めりたん* になったよ。`
           );
         } else {
@@ -293,7 +293,7 @@ module.exports = robot => {
             }
           );
           res.send(
-            `ジャンケン！ ${botHand}！...きみの *勝ち* だよ。 *${bet}めりたん* をあげるね。これで *${account.meritum +
+            `ジャンケン！ ${botHand}！...<@${slackId}>ちゃんの *勝ち* だよ。 *${bet}めりたん* をあげるね。これで *${account.meritum +
               bet}めりたん* になったよ。`
           );
         }
@@ -393,7 +393,7 @@ module.exports = robot => {
           }
         );
         res.send(
-          `称号 *${title}* を手に入れたよ！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、残り *${newMeritum}めりたん* となったよ。`
+          `称号 *${title}* を手に入れたよ！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、残り *${newMeritum}めりたん* になったよ。`
         );
         // 既に持っている称号の場合は、5分の1の確率でめりたんbotに引き取られる
         if (account.titles.includes(title) && Math.random() > 0.8) {
@@ -419,7 +419,7 @@ module.exports = robot => {
             }
           );
           res.send(
-            `称号 *${title}* はもうあるみたいだから、めりたんbotがもらっちゃうね。 めりたんbotの称号数は *${newBotTitlesStr.length}個* 、全称号は *${newBotTitlesStr}* 、 *${botAccount.meritum}めりたん* となったよ。`
+            `称号 *${title}* はもうあるみたいだから、めりたんbotがもらっちゃうね。 めりたんbotの称号数は *${newBotTitlesStr.length}個* 、全称号は *${newBotTitlesStr}* 、 *${botAccount.meritum}めりたん* になったよ。`
           );
         }
         yield t.commit();
@@ -480,7 +480,7 @@ module.exports = robot => {
         yield t.commit();
         const titlesWithAlt = account.titles || 'なし';
         res.send(
-          `きみの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、めりたん数は *${account.meritum}めりたん* だよ。`
+          `<@${slackId}> ちゃんの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、めりたん数は *${account.meritum}めりたん* だよ。`
         );
       } catch (e) {
         console.log('Error on mself> e:');
@@ -664,8 +664,8 @@ module.exports = robot => {
         );
         yield t.commit();
         res.send(
-          `<@${fromSlackId}> から  <@${toSlackId}> に *${sendMeritum}めりたん* を送って、<@${fromSlackId}> は *${fromAccount.meritum -
-            sendMeritum}めりたん* に、 <@${toSlackId}> は *${toAccount.meritum +
+          `<@${fromSlackId}>から<@${toSlackId}>に *${sendMeritum}めりたん* を送って、<@${fromSlackId}>は *${fromAccount.meritum -
+            sendMeritum}めりたん* に、 <@${toSlackId}>は *${toAccount.meritum +
             sendMeritum}めりたん* になったよ。`
         );
       } catch (e) {
