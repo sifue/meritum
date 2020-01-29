@@ -191,8 +191,8 @@ module.exports = (robot: Robot<any>) => {
 
         // ボットアカウントがない場合に作成してもまだないなら終了
         if (!botAccount) {
-          res.send('ボットアカウントを作成することができなかってみたい。');
-          console.log('ボットアカウントを作成することができなかってみたい。');
+          res.send('ボットアカウントを作成することができなかったみたい。');
+          console.log('ボットアカウントを作成することができなかったみたい。');
           await t.commit();
           return;
         }
@@ -542,7 +542,7 @@ module.exports = (robot: Robot<any>) => {
   robot.hear(/^mrank> (.+)/i, async (res: Response<Robot<any>>) => {
     const rawText = (res.message as MessageWithRawText).rawText;
     if (!rawText) {
-      res.send('rawTextが正しく取得でいないみたい。');
+      res.send('rawTextが正しく取得できていないみたい。');
       return;
     }
 
