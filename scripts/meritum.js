@@ -243,7 +243,7 @@ module.exports = robot => {
         const botHand = botHands[Math.floor(Math.random() * botHands.length)];
         if (botHand === hand) {
           res.send(
-            `ジャンケン！ ${botHand}！... *あいこ* だね。またチャレンジしてね。`
+            `ジャンケン！ ${botHand}！...${displayName}ちゃんは *あいこ* だね。またチャレンジしてね。`
           );
           yield t.commit();
           return;
@@ -271,7 +271,7 @@ module.exports = robot => {
             }
           );
           res.send(
-            `ジャンケン！ ${botHand}！...きみの *負け* だよ。 *${bet}めりたん* もらうね。これで *${account.meritum -
+            `ジャンケン！ ${botHand}！...${displayName}ちゃんの *負け* だよ。 *${bet}めりたん* もらうね。これで *${account.meritum -
               bet}めりたん* になったよ。`
           );
         } else {
@@ -293,7 +293,7 @@ module.exports = robot => {
             }
           );
           res.send(
-            `ジャンケン！ ${botHand}！...きみの *勝ち* だよ。 *${bet}めりたん* をあげるね。これで *${account.meritum +
+            `ジャンケン！ ${botHand}！...${displayName}ちゃんの *勝ち* だよ。 *${bet}めりたん* をあげるね。これで *${account.meritum +
               bet}めりたん* になったよ。`
           );
         }
