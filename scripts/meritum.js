@@ -662,6 +662,7 @@ module.exports = robot => {
             }
           }
         );
+        yield t.commit();
         res.send(
           `<@${fromSlackId}> から  <@${toSlackId}> に *${sendMeritum}めりたん* を送って、<@${fromSlackId}> は *${fromAccount.meritum -
             sendMeritum}めりたん* に、 <@${toSlackId}> は *${toAccount.meritum +
