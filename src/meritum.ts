@@ -215,7 +215,7 @@ module.exports = (robot: Robot<any>) => {
         } else if (account.meritum < bet) {
           // ベット分持っていない場合、終了
           res.send(
-            `<@${slackId}>は *${bet}めりたん* がないからジャンケンできないよ。`
+            `<@${slackId}>ちゃんは *${bet}めりたん* がないからジャンケンできないよ。`
           );
           await t.commit();
           return;
@@ -327,7 +327,7 @@ module.exports = (robot: Robot<any>) => {
       } else if (account.meritum < GACHA_MERITUM) {
         // ガチャ費用を持っていない場合、終了
         res.send(
-          `<@${slackId}>は、ガチャ費用の *${GACHA_MERITUM}めりたん* がないからガチャできないよ。`
+          `<@${slackId}>ちゃんは、ガチャ費用の *${GACHA_MERITUM}めりたん* がないからガチャできないよ。`
         );
         await t.commit();
         return;
@@ -488,7 +488,7 @@ module.exports = (robot: Robot<any>) => {
       await t.commit();
       const titlesWithAlt = account.titles || 'なし';
       res.send(
-        `<@${slackId}> ちゃんの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、めりたん数は *${account.meritum}めりたん* だよ。`
+        `<@${slackId}>ちゃんの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、めりたん数は *${account.meritum}めりたん* だよ。`
       );
     } catch (e) {
       console.log('Error on mself> e:');
@@ -583,7 +583,7 @@ module.exports = (robot: Robot<any>) => {
       await t.commit();
       const titlesWithAlt = account.titles || 'なし';
       res.send(
-        `<@${slackId}>の順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、めりたん数は *${account.meritum}めりたん* だよ。`
+        `<@${slackId}>ちゃんの順位は *第${rank}位* 、 称号数は *${account.numOfTitles}個* 、全称号は *${titlesWithAlt}* 、めりたん数は *${account.meritum}めりたん* だよ。`
       );
     } catch (e) {
       console.log('Error on mrank> e:');
