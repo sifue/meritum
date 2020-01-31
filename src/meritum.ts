@@ -152,7 +152,7 @@ module.exports = (robot: Robot<any>) => {
 
       if (bet > MAX_JANKEN_BET) {
         res.send(
-          `*${MAX_JANKEN_BET}めりたん* 以上をかけてジャンケンすることは禁止されているよ。`
+          `*${MAX_JANKEN_BET}めりたん* より大きい数をかけてジャンケンすることは禁止されているよ。`
         );
         return;
       }
