@@ -204,8 +204,8 @@ module.exports = robot => {
         }
         // ボットアカウントがない場合に作成してもまだないなら終了
         if (!botAccount) {
-          res.send('ボットアカウントを作成することができなかってみたい。');
-          console.log('ボットアカウントを作成することができなかってみたい。');
+          res.send('ボットアカウントを作成することができなかったみたい。');
+          console.log('ボットアカウントを作成することができなかったみたい。');
           yield t.commit();
           return;
         }
@@ -532,7 +532,7 @@ module.exports = robot => {
     __awaiter(void 0, void 0, void 0, function*() {
       const rawText = res.message.rawText;
       if (!rawText) {
-        res.send('rawTextが正しく取得でいないみたい。');
+        res.send('rawTextが正しく取得できていないみたい。');
         return;
       }
       const parsed = rawText.match(/^mrank&gt; <@(.+)>.*/);
