@@ -9,6 +9,7 @@ import { database } from './models/sequelizeLoader';
 
 import { Account } from './models/accounts';
 import { LoginBonus } from './models/loginBonuses';
+import { Omikuji } from './models/omikuji';
 
 import { Slack, SlackBot } from './types/meritum';
 
@@ -16,6 +17,7 @@ const LOGIN_BONUS_MERITUN = 100; // ログインボーナス
 const BOT_INITIAL_MERITUM = 20000; // ボットの初期めりたん
 const MAX_JANKEN_BET = 20; // 最大ベット
 const GACHA_MERITUM = 280; // ガチャ費用
+const OMIKUJI_MERITUM = 10; // おみくじ費用
 const USER_INITIAL_MERITUM = GACHA_MERITUM + MAX_JANKEN_BET; // ユーザーの初期めりたん
 
 /**
@@ -34,6 +36,7 @@ class MessageWithRawText extends Message {
 (async () => {
   await Account.sync();
   await LoginBonus.sync();
+  await Omikuji.sync();
 })();
 
 module.exports = (robot: Robot<any>) => {
@@ -49,6 +52,7 @@ module.exports = (robot: Robot<any>) => {
         '`mlogin>` : ログインボーナスの *100めりたん* をゲット。毎朝7時にリセット。\n' +
         `\`mjanken> (グー|チョキ|パー) (1-${MAX_JANKEN_BET})\` : めりたんbotとめりたんを賭けてジャンケン。\n` +
         `\`mgacha>\` : *${GACHA_MERITUM}めりたん* でガチャを回し、称号をゲット。\n` +
+        `\`mmikuji>\` : *${OMIKUJI_MERITUM}めりたん* でおみくじを引き、今日の運勢を占って景品をもらおう。\n` +
         '`mself>` : 自分の順位、称号数、全称号、めりたんを表示。\n' +
         '`mranking>` : 称号数で決まるランキングを表示(同称号数なら、めりたんの数順)。\n' +
         '`mrank> (@ユーザー名)` : 指定したユーザーの順位、称号数、全称号、めりたんを表示。\n' +
@@ -698,6 +702,191 @@ module.exports = (robot: Robot<any>) => {
       );
     } catch (e) {
       console.log('Error on msend> e:');
+      console.log(e);
+      await t.rollback();
+    }
+  });
+
+  // 運命のおみくじ
+  robot.hear(/^mmikuji>$/i, async (res: Response<Robot<any>>) => {
+    const user = res.message.user;
+    const slackId = user.id;
+    const name = user.name;
+    const realName = user.real_name;
+    const slack = user.slack as Slack;
+    const displayName = slack.profile.display_name;
+    const slackBot = robot.adapter as SlackBot;
+
+    const MAX_WIN = 20;
+
+    const t = await database.transaction();
+    try {
+      const receiptDate = getReceiptToday();
+      const countOmikuji = await Omikuji.count({
+        where: {
+          slackId: slackId,
+          receiptDate: {
+            [Op.eq]: receiptDate
+          }
+        }
+      });
+
+      if (countOmikuji === 1) {
+        // 占い済み
+        await t.commit();
+        res.send(`<@${slackId}>ちゃんは、既に今日の運勢を占ったよ。`);
+      } else {
+        // ボット自身に最低でも20めりたんあるかチェック
+        let botAccount = await Account.findByPk(slackBot.self.id);
+        if (!botAccount) {
+          // ボットアカウントがない場合作る
+          await Account.create({
+            slackId: slackBot.self.id,
+            name: slackBot.self.name,
+            realName: '',
+            displayName: '',
+            meritum: BOT_INITIAL_MERITUM,
+            titles: '',
+            numOfTitles: 0
+          });
+          botAccount = await Account.findByPk(slackBot.self.id);
+        } else if (botAccount.meritum < MAX_WIN) {
+          // 最大景品分持っていない場合、終了
+          res.send(
+            `<@${slackBot.self.id}>はおみくじを用意できなかったみたい。`
+          );
+          await t.commit();
+          return;
+        }
+
+        // ボットアカウントがない場合に作成してもまだないなら終了
+        if (!botAccount) {
+          res.send('ボットアカウントを作成することができなかったみたい。');
+          console.log('ボットアカウントを作成することができなかったみたい。');
+          await t.commit();
+          return;
+        }
+
+        // 相手がベットできるかチェック
+        let account = await Account.findByPk(slackId);
+        if (!account) {
+          // アカウントがない場合作る
+          const meritum = 0;
+          await Account.create({
+            slackId,
+            name,
+            realName,
+            displayName,
+            meritum: USER_INITIAL_MERITUM,
+            titles: '',
+            numOfTitles: 0
+          });
+          account = await Account.findByPk(slackId);
+        } else if (account.meritum < OMIKUJI_MERITUM) {
+          // おみくじ代分持っていない場合、終了
+          res.send(
+            `<@${slackId}>ちゃんは *${OMIKUJI_MERITUM}めりたん* ないからおみくじ引けないよ。`
+          );
+          await t.commit();
+          return;
+        }
+
+        // アカウントがない場合に作成してもまだないなら終了
+        if (!account) {
+          res.send('アカウントを作成することができなかったみたい。');
+          console.log('アカウントを作成することができなかったみたい。');
+          await t.commit();
+          return;
+        }
+
+        const prizes = [
+          '大吉',
+          '吉',
+          '吉',
+          '中吉',
+          '中吉',
+          '中吉',
+          '小吉',
+          '小吉',
+          '小吉',
+          '小吉',
+          '末吉',
+          '末吉',
+          '末吉',
+          '末吉',
+          '末吉',
+          '凶',
+          '凶',
+          '凶',
+          '凶',
+          '大凶'
+        ];
+        const prize = prizes[Math.floor(Math.random() * prizes.length)];
+
+        function getPrizeMeritum(prize: String) {
+          let result = 0;
+          switch (prize) {
+            case '大吉':
+              result = 20;
+              break;
+            case '吉':
+              result = 15;
+              break;
+            case '中吉':
+              result = 10;
+              break;
+            case '小吉':
+              result = 7;
+              break;
+            case '末吉':
+              result = 4;
+              break;
+            case '凶':
+              result = 1;
+              break;
+            case '大凶':
+              result = 0;
+              break;
+            default:
+              result = 0;
+              break;
+          }
+          return result;
+        }
+
+        // 景品
+        const prizeMeritum = getPrizeMeritum(prize);
+        // 支払い処理
+        const newMeritum = account.meritum - OMIKUJI_MERITUM + prizeMeritum;
+        await Account.update(
+          {
+            meritum: newMeritum
+          },
+          {
+            where: {
+              slackId: slackId
+            }
+          }
+        );
+
+        // おみくじ実績を作成
+        await Omikuji.create({
+          slackId,
+          receiptDate
+        });
+
+        if (prizeMeritum === 0) {
+          res.send(
+            `<@${slackId}>ちゃんの今日の運勢は... *${prize}* だよ！ 景品はないみたい。`
+          );
+        } else {
+          res.send(
+            `<@${slackId}>ちゃんの今日の運勢は... *${prize}* だよ！ 景品に *${prizeMeritum}めりたん* あげるね。`
+          );
+        }
+      }
+    } catch (e) {
+      console.log('Error on mmikuji> e:');
       console.log(e);
       await t.rollback();
     }
