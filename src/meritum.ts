@@ -875,6 +875,8 @@ module.exports = (robot: Robot<any>) => {
           receiptDate
         });
 
+        await t.commit();
+
         if (prizeMeritum === 0) {
           res.send(
             `<@${slackId}>ちゃんの今日の運勢は... *${prize}* だよ！ 景品はないみたい。`
