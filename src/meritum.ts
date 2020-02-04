@@ -134,7 +134,198 @@ module.exports = (robot: Robot<any>) => {
       await t.rollback();
     }
   });
-
+  // チンチロリン（Chin Chiro Rinで CCR）
+  robot.hear(/^mccr> (\d+)$/i, res =>
+   async (res: Response<Robot<any>>) => {
+      const user = res.message.user;
+      const slackId = user.id;
+      const name = user.name;
+      const realName = user.real_name;
+      const slack = user.slack as Slack;
+      const displayName = slack.profile.display_name;
+      const slackBot = robot.adapter as SlackBot;
+      const bet = parseInt(res.match[1]);
+      if (bet > MAX_JANKEN_BET) {
+        res.send(
+          `*${MAX_JANKEN_BET}めりたん* より大きい数をかけてチンチロリンすることは禁止されているよ。`
+        );
+        return;
+      }
+      if (bet <= 0) {
+        res.send(
+          '*1めりたん* より小さな数の *めりたん* をかけることはできないよ。'
+        );
+        return;
+      }
+      const t = await database.transaction();
+      try {
+        // ボット自身に最低でも10めりたんあるかチェック
+        let botAccount = await Account.findByPk(slackBot.self.id);
+        if (!botAccount) {
+          // ボットアカウントがない場合作る
+          await Account.create({
+            slackId: slackBot.self.id,
+            name: slackBot.self.name,
+            realName: '',
+            displayName: '',
+            meritum: BOT_INITIAL_MERITUM,
+            titles: '',
+            numOfTitles: 0
+          });
+          botAccount = await Account.findByPk(slackBot.self.id);
+        } else if (botAccount.meritum < bet) {
+          // ベット分持っていない場合、終了
+          res.send(
+            `<@${slackBot.self.id}>は *${bet}めりたん* をもっていないよ。`
+          );
+          await t.commit();
+          return;
+        }
+        // ボットアカウントがない場合に作成してもまだないなら終了
+        if (!botAccount) {
+          res.send('ボットアカウントを作成することができなかったみたい。');
+          console.log('ボットアカウントを作成することができなかったみたい。');
+          await t.commit();
+          return;
+        }
+        // 相手がベットできるかチェック
+        let account = await Account.findByPk(slackId);
+        if (!account) {
+          // アカウントがない場合作る
+          const meritum = 0;
+          await Account.create({
+            slackId,
+            name,
+            realName,
+            displayName,
+            meritum: USER_INITIAL_MERITUM,
+            titles: '',
+            numOfTitles: 0
+          });
+          account = await Account.findByPk(slackId);
+        } else if (account.meritum < bet) {
+          // ベット分持っていない場合、終了
+          res.send(
+            `<@${slackId}>ちゃんは *${bet}めりたん* がないからチンチロリンできないよ。`
+          );
+          await t.commit();
+          return;
+        }
+        // アカウントがない場合に作成してもまだないなら終了
+        if (!account) {
+          res.send('アカウントを作成することができなかったみたい。');
+          console.log('アカウントを作成することができなかったみたい。');
+          await t.commit();
+          return;
+        }
+        //サイコロ を振る
+        const botdice= [Math.floor( Math.random() * 6 ) + 1, Math.floor( Math.random() * 6 ) + 1 , Math.floor( Math.random() * 6 ) + 1]
+        res.send(':dice'+botdice[0]+": :dice"+botdice[1]+": :dice"+botdice[2]+":");
+        if(botdice[0]==1 && botdice[1]==1 && botdice[2]==1 ){
+            res.send('<@${slackId}>ちゃん！おめでとう！ピンゾロだよ！これで *${account.meritum + bet*5}めりたん* になったよ。');
+            await Account.update(
+              { meritum: account.meritum + bet * 5},
+              {
+                  where: {
+                  slackId: slackId
+                  }
+              }
+            );
+              await Account.update(
+                { meritum: botAccount.meritum - bet * 5},
+                {
+                  where: {
+                    slackId: slackBot.self.id
+                  }
+                }
+            );
+        }else if(botdice[0]==botdice[1] && botdice[1]==botdice[2]){
+            res.send('<@${slackId}>ちゃん！おめでとう！ゾロ目だよ！これで *${account.meritum + bet*3}めりたん* になったよ。');
+            await Account.update(
+              { meritum: account.meritum + bet * 3},
+              {
+                where: {
+                slackId: slackId
+                }
+              }
+            );
+            await Account.update(
+              { meritum: botAccount.meritum - bet * 3},
+              {
+                where: {
+                    slackId: slackBot.self.id
+                }
+              }
+            );
+        }else if(botdice.indexOf(4)!== -1 && botdice.indexOf(5)!== -1 && botdice.indexOf(6)!== -1 ){
+            res.send('<@${slackId}>ちゃん！おめでとう！シゴロだよ！これで *${account.meritum + bet*2}めりたん* になったよ。');
+            await Account.update(
+              { meritum: account.meritum + bet * 2},
+              {
+                where: {
+                slackId: slackId
+                }
+              }
+            );
+            await Account.update(
+              { meritum: botAccount.meritum - bet * 2},
+              {
+                where: {
+                    slackId: slackBot.self.id
+                }
+              }
+            );
+        }else if(botdice.indexOf(1)!== -1 && botdice.indexOf(2)!== -1 && botdice.indexOf(3)!== -1 ){
+            res.send('<@${slackId}>ちゃん！たいへん！ヒフミだよ！これで *${account.meritum - bet}めりたん* になったよ。');
+            await Account.update(
+              { meritum: account.meritum - bet },
+              {
+                where: {
+                slackId: slackId
+                }
+              }
+            );
+            await Account.update(
+              { meritum: botAccount.meritum + bet },
+              {
+                where: {
+                    slackId: slackBot.self.id
+                }
+              }
+            );
+        }else if(botdice[0]==botdice[1] || botdice[0]==botdice[2] || botdice[1]==botdice[2]){
+            res.send(
+              `今回は通常の目みたい。またチャレンジしてね！`
+            );
+            await t.commit();
+            return;
+        }else{
+            res.send('<@${slackId}>ちゃん！ざんねんな目無しだよ！これで *${account.meritum - bet}めりたん* になったよ。');
+            await Account.update(
+              { meritum: account.meritum - bet },
+              {
+                where: {
+                slackId: slackId
+                }
+              }
+            );
+            await Account.update(
+              { meritum: botAccount.meritum + bet },
+              {
+                where: {
+                    slackId: slackBot.self.id
+                }
+              }
+            );
+        }
+        await t.commit();
+      } catch (e) {
+        console.log('Error on mjanken> e:');
+        console.log(e);
+        await t.rollback();
+      }
+    })
+  );
   // ジャンケン
   robot.hear(
     /^mjanken> (グー|チョキ|パー) (\d+)$/i,
