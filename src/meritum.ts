@@ -767,7 +767,7 @@ module.exports = (robot: Robot<any>) => {
           return;
         }
 
-        // 相手がベットできるかチェック
+        // 相手がおみくじできるかチェック
         let account = await Account.findByPk(slackId);
         if (!account) {
           // アカウントがない場合作る
