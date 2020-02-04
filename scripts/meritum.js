@@ -193,10 +193,10 @@ module.exports = robot => {
             numOfTitles: 0
           });
           botAccount = yield accounts_1.Account.findByPk(slackBot.self.id);
-        } else if (botAccount.meritum < bet) {
+        } else if (botAccount.meritum < bet * 5) {
           // ベット分持っていない場合、終了
           res.send(
-            `<@${slackBot.self.id}>は *${bet}めりたん* をもっていないよ。`
+            `<@${slackBot.self.id}>は *${bet * 5}めりたん* をもっていないよ。`
           );
           yield t.commit();
           return;
@@ -319,12 +319,12 @@ module.exports = robot => {
             );
         }else if(botdice[0]==botdice[1] || botdice[0]==botdice[2] || botdice[1]==botdice[2]){
             res.send(
-              `今回は通常の目みたい。またチャレンジしてね！`
+              '今回は通常の目みたい。またチャレンジしてね！'
             );
             yield t.commit();
             return;
         }else{
-            res.send('<@${slackId}>ちゃん！ざんねんな目無しだよ！これで *${account.meritum - bet}めりたん* になったよ。');
+            res.send('<@${slackId}>ちゃん！ざんねん！目無しだよ！これで *${account.meritum - bet}めりたん* になったよ。');
             yield accounts_1.Account.update(
               { meritum: account.meritum - bet },
               {
