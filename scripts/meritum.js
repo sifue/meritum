@@ -735,7 +735,7 @@ module.exports = robot => {
             yield t.commit();
             return;
           }
-          // 相手がベットできるかチェック
+          // 相手がおみくじできるかチェック
           let account = yield accounts_1.Account.findByPk(slackId);
           if (!account) {
             // アカウントがない場合作る
@@ -837,6 +837,7 @@ module.exports = robot => {
             slackId,
             receiptDate
           });
+          yield t.commit();
           if (prizeMeritum === 0) {
             res.send(
               `<@${slackId}>ちゃんの今日の運勢は... *${prize}* だよ！ 景品はないみたい。`
