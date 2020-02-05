@@ -493,8 +493,8 @@ module.exports = robot => {
       }
     })
   );
-  // 自分のデータ表示
-  robot.hear(/^mranking>$/i, res =>
+  // 自分のデータ表示 (Slackbot対応のため行頭でなくても許可)
+  robot.hear(/mranking>$/i, res =>
     __awaiter(void 0, void 0, void 0, function*() {
       const user = res.message.user;
       const slack = user.slack;

@@ -501,8 +501,8 @@ module.exports = (robot: Robot<any>) => {
     }
   });
 
-  // 自分のデータ表示
-  robot.hear(/^mranking>$/i, async (res: Response<Robot<any>>) => {
+  // 自分のデータ表示 (Slackbot対応のため行頭でなくても許可)
+  robot.hear(/mranking>$/i, async (res: Response<Robot<any>>) => {
     const user = res.message.user;
     const slack = user.slack as Slack;
 
