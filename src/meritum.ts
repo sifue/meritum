@@ -400,34 +400,40 @@ module.exports = (robot: Robot<any>) => {
       );
 
       // 既に持っている称号の場合は、5分の1の確率でめりたんbotに引き取られる
-      if (account.titles.includes(title) && Math.random() > 0.8) {
-        let botSlackId = (robot.adapter as SlackBot).self.id;
-        let botAccount = await Account.findByPk(botSlackId);
+      if (account.titles.includes(title)) {
+        if (Math.random() > 0.8) {
+          let botSlackId = (robot.adapter as SlackBot).self.id;
+          let botAccount = await Account.findByPk(botSlackId);
 
-        if (!botAccount) {
-          await t.commit();
-          return;
-        }
-
-        let newBotTitles = botAccount.titles.split('');
-        newBotTitles.push(title);
-        newBotTitles = Array.from(new Set(newBotTitles)).sort();
-        const newBotTitlesStr = newBotTitles.join('');
-        await Account.update(
-          {
-            titles: newBotTitlesStr,
-            numOfTitles: newBotTitlesStr.length
-          },
-          {
-            where: {
-              slackId: botSlackId
-            }
+          if (!botAccount) {
+            await t.commit();
+            return;
           }
-        );
 
-        res.send(
-          `称号 *${title}* はもうあるみたいだから、めりたんbotがもらっちゃうね。 めりたんbotの称号数は *${newBotTitlesStr.length}個* 、全称号は *${newBotTitlesStr}* 、 *${botAccount.meritum}めりたん* になったよ。`
-        );
+          let newBotTitles = botAccount.titles.split('');
+          newBotTitles.push(title);
+          newBotTitles = Array.from(new Set(newBotTitles)).sort();
+          const newBotTitlesStr = newBotTitles.join('');
+          await Account.update(
+            {
+              titles: newBotTitlesStr,
+              numOfTitles: newBotTitlesStr.length
+            },
+            {
+              where: {
+                slackId: botSlackId
+              }
+            }
+          );
+
+          res.send(
+            `称号 *${title}* はもうあるみたいだから、めりたんbotがもらっちゃうね。 めりたんbotの称号数は *${newBotTitlesStr.length}個* 、全称号は *${newBotTitlesStr}* 、 *${botAccount.meritum}めりたん* になったよ。`
+          );
+        } else {
+          res.send(
+            `称号 *${title}* はもうあるみたいだね、残念。またチャレンジしてね。`
+          );
+        }
       }
 
       await t.commit();
