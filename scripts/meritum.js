@@ -629,6 +629,7 @@ module.exports = robot => {
                 as_user: true
               });
               yield t.commit();
+              session.status = 'finished';
               return;
             }
             const isMyWin =

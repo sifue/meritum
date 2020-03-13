@@ -604,6 +604,7 @@ module.exports = (robot: MRobot<any>) => {
               as_user: true
             })) as ChatPostMessageResponse;
             await t.commit();
+            session.status = 'finished';
             return;
           }
 
