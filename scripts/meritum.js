@@ -401,6 +401,12 @@ module.exports = robot => {
         const realName = myUser.real_name;
         const slack = myUser.slack;
         const displayName = slack.profile.display_name;
+        // XXX: デバッグ時は自身とのジャンケンを可能にする
+        if (mySlackId === opponentSlackId) {
+          res.send('自身とはじゃんけんできないよ。');
+          yield t.commit();
+          return;
+        }
         let myAccount = yield accounts_1.Account.findByPk(mySlackId, {
           transaction: t
         });

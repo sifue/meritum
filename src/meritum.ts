@@ -388,6 +388,13 @@ module.exports = (robot: MRobot<any>) => {
       const slack = myUser.slack as Slack;
       const displayName = slack.profile.display_name;
 
+      // XXX: デバッグ時は自身とのジャンケンを可能にする
+      if (mySlackId === opponentSlackId) {
+        res.send('自身とはじゃんけんできないよ。');
+        await t.commit();
+        return;
+      }
+
       let myAccount = await Account.findByPk(mySlackId, { transaction: t });
 
       if (!myAccount) {
