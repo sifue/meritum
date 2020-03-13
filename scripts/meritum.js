@@ -100,7 +100,8 @@ module.exports = robot => {
             receiptDate: {
               [sequelize_1.Op.eq]: receiptDate
             }
-          }
+          },
+          transaction: t
         });
         if (countLoginBonus === 1) {
           // 取得済み
@@ -111,19 +112,24 @@ module.exports = robot => {
         } else {
           // 付与へ
           // アカウントがない場合には作り、100めりたん付与、ログインボーナス実績を追加
-          const oldAccount = yield accounts_1.Account.findByPk(slackId);
+          const oldAccount = yield accounts_1.Account.findByPk(slackId, {
+            transaction: t
+          });
           let meritum = 0;
           if (!oldAccount) {
             meritum = LOGIN_BONUS_MERITUN + USER_INITIAL_MERITUM;
-            yield accounts_1.Account.create({
-              slackId,
-              name,
-              realName,
-              displayName,
-              meritum,
-              titles: '',
-              numOfTitles: 0
-            });
+            yield accounts_1.Account.create(
+              {
+                slackId,
+                name,
+                realName,
+                displayName,
+                meritum,
+                titles: '',
+                numOfTitles: 0
+              },
+              { transaction: t }
+            );
           } else {
             meritum = oldAccount.meritum + LOGIN_BONUS_MERITUN;
             // ログインボーナス取得時にユーザー名などを更新
@@ -137,7 +143,8 @@ module.exports = robot => {
               {
                 where: {
                   slackId: slackId
-                }
+                },
+                transaction: t
               }
             );
           }
@@ -145,7 +152,8 @@ module.exports = robot => {
           yield loginBonuses_1.LoginBonus.create({
             slackId,
             receiptDate
-          });
+          }),
+            { transaction: t };
           yield t.commit();
           res.send(
             `<@${slackId}>ちゃんに、ログインボーナスとして *${LOGIN_BONUS_MERITUN}めりたん* をプレゼント。これで *${meritum}めりたん* になったよ。`
@@ -185,19 +193,26 @@ module.exports = robot => {
       const t = yield sequelizeLoader_1.database.transaction();
       try {
         // ボット自身に最低でも10めりたんあるかチェック
-        let botAccount = yield accounts_1.Account.findByPk(slackBot.self.id);
+        let botAccount = yield accounts_1.Account.findByPk(slackBot.self.id, {
+          transaction: t
+        });
         if (!botAccount) {
           // ボットアカウントがない場合作る
-          yield accounts_1.Account.create({
-            slackId: slackBot.self.id,
-            name: slackBot.self.name,
-            realName: '',
-            displayName: '',
-            meritum: BOT_INITIAL_MERITUM,
-            titles: '',
-            numOfTitles: 0
+          yield accounts_1.Account.create(
+            {
+              slackId: slackBot.self.id,
+              name: slackBot.self.name,
+              realName: '',
+              displayName: '',
+              meritum: BOT_INITIAL_MERITUM,
+              titles: '',
+              numOfTitles: 0
+            },
+            { transaction: t }
+          );
+          botAccount = yield accounts_1.Account.findByPk(slackBot.self.id, {
+            transaction: t
           });
-          botAccount = yield accounts_1.Account.findByPk(slackBot.self.id);
         } else if (botAccount.meritum < bet) {
           // ベット分持っていない場合、終了
           res.send(
@@ -214,7 +229,9 @@ module.exports = robot => {
           return;
         }
         // 相手がベットできるかチェック
-        let account = yield accounts_1.Account.findByPk(slackId);
+        let account = yield accounts_1.Account.findByPk(slackId, {
+          transaction: t
+        });
         if (!account) {
           // アカウントがない場合作る
           const meritum = 0;
@@ -226,8 +243,11 @@ module.exports = robot => {
             meritum: USER_INITIAL_MERITUM,
             titles: '',
             numOfTitles: 0
+          }),
+            { transaction: t };
+          account = yield accounts_1.Account.findByPk(slackId, {
+            transaction: t
           });
-          account = yield accounts_1.Account.findByPk(slackId);
         } else if (account.meritum < bet) {
           // ベット分持っていない場合、終了
           res.send(
@@ -263,7 +283,8 @@ module.exports = robot => {
             {
               where: {
                 slackId: slackId
-              }
+              },
+              transaction: t
             }
           );
           yield accounts_1.Account.update(
@@ -271,7 +292,8 @@ module.exports = robot => {
             {
               where: {
                 slackId: slackBot.self.id
-              }
+              },
+              transaction: t
             }
           );
           res.send(
@@ -285,7 +307,8 @@ module.exports = robot => {
             {
               where: {
                 slackId: slackId
-              }
+              },
+              transaction: t
             }
           );
           yield accounts_1.Account.update(
@@ -293,7 +316,8 @@ module.exports = robot => {
             {
               where: {
                 slackId: slackBot.self.id
-              }
+              },
+              transaction: t
             }
           );
           res.send(
@@ -321,19 +345,26 @@ module.exports = robot => {
       const t = yield sequelizeLoader_1.database.transaction();
       try {
         // 相手がガチャできるかチェック
-        let account = yield accounts_1.Account.findByPk(slackId);
+        let account = yield accounts_1.Account.findByPk(slackId, {
+          transaction: t
+        });
         if (!account) {
           // アカウントがない場合作る
-          yield accounts_1.Account.create({
-            slackId,
-            name,
-            realName,
-            displayName,
-            meritum: USER_INITIAL_MERITUM,
-            titles: '',
-            numOfTitles: 0
+          yield accounts_1.Account.create(
+            {
+              slackId,
+              name,
+              realName,
+              displayName,
+              meritum: USER_INITIAL_MERITUM,
+              titles: '',
+              numOfTitles: 0
+            },
+            { transaction: t }
+          );
+          account = yield accounts_1.Account.findByPk(slackId, {
+            transaction: t
           });
-          account = yield accounts_1.Account.findByPk(slackId);
         } else if (account.meritum < GACHA_MERITUM) {
           // ガチャ費用を持っていない場合、終了
           res.send(
@@ -393,7 +424,8 @@ module.exports = robot => {
           {
             where: {
               slackId: slackId
-            }
+            },
+            transaction: t
           }
         );
         res.send(
@@ -403,7 +435,9 @@ module.exports = robot => {
         if (account.titles.includes(title)) {
           if (Math.random() > 0.8) {
             let botSlackId = robot.adapter.self.id;
-            let botAccount = yield accounts_1.Account.findByPk(botSlackId);
+            let botAccount = yield accounts_1.Account.findByPk(botSlackId, {
+              transaction: t
+            });
             if (!botAccount) {
               yield t.commit();
               return;
@@ -420,7 +454,8 @@ module.exports = robot => {
               {
                 where: {
                   slackId: botSlackId
-                }
+                },
+                transaction: t
               }
             );
             res.send(
@@ -451,19 +486,26 @@ module.exports = robot => {
       const displayName = slack.profile.display_name;
       const t = yield sequelizeLoader_1.database.transaction();
       try {
-        let account = yield accounts_1.Account.findByPk(slackId);
+        let account = yield accounts_1.Account.findByPk(slackId, {
+          transaction: t
+        });
         if (!account) {
           // アカウントがない場合作る
-          yield accounts_1.Account.create({
-            slackId,
-            name,
-            realName,
-            displayName,
-            meritum: USER_INITIAL_MERITUM,
-            titles: '',
-            numOfTitles: 0
+          yield accounts_1.Account.create(
+            {
+              slackId,
+              name,
+              realName,
+              displayName,
+              meritum: USER_INITIAL_MERITUM,
+              titles: '',
+              numOfTitles: 0
+            },
+            { transaction: t }
+          );
+          account = yield accounts_1.Account.findByPk(slackId, {
+            transaction: t
           });
-          account = yield accounts_1.Account.findByPk(slackId);
         }
         // アカウントがない場合に作成してもまだないなら終了
         if (!account) {
@@ -477,7 +519,8 @@ module.exports = robot => {
             ['numOfTitles', 'DESC'],
             ['meritum', 'DESC']
           ],
-          attributes: ['slackId']
+          attributes: ['slackId'],
+          transaction: t
         });
         let rank = 1;
         for (const a of accounts) {
@@ -511,7 +554,8 @@ module.exports = robot => {
             ['numOfTitles', 'DESC'],
             ['meritum', 'DESC']
           ],
-          limit: 100
+          limit: 100,
+          transaction: t
         });
         yield t.commit();
         let message = ':crown: *〜めりたん称号ランキング〜* :crown:\n';
@@ -553,7 +597,9 @@ module.exports = robot => {
       const slackId = parsed[1];
       const t = yield sequelizeLoader_1.database.transaction();
       try {
-        let account = yield accounts_1.Account.findByPk(slackId);
+        let account = yield accounts_1.Account.findByPk(slackId, {
+          transaction: t
+        });
         if (!account) {
           res.send('このユーザーはプロジェクトmeritumをやってないみたい。');
           yield t.commit();
@@ -564,7 +610,8 @@ module.exports = robot => {
             ['numOfTitles', 'DESC'],
             ['meritum', 'DESC']
           ],
-          attributes: ['slackId']
+          attributes: ['slackId'],
+          transaction: t
         });
         let rank = 1;
         for (const a of accounts) {
@@ -609,7 +656,9 @@ module.exports = robot => {
       }
       const t = yield sequelizeLoader_1.database.transaction();
       try {
-        let toAccount = yield accounts_1.Account.findByPk(toSlackId);
+        let toAccount = yield accounts_1.Account.findByPk(toSlackId, {
+          transaction: t
+        });
         if (!toAccount) {
           res.send('指定したユーザーはプロジェクトmeritumをやってないみたい。');
           yield t.commit();
@@ -626,7 +675,9 @@ module.exports = robot => {
           yield t.commit();
           return;
         }
-        let fromAccount = yield accounts_1.Account.findByPk(fromSlackId);
+        let fromAccount = yield accounts_1.Account.findByPk(fromSlackId, {
+          transaction: t
+        });
         if (!fromAccount) {
           // アカウントがない場合作る
           yield accounts_1.Account.create({
@@ -637,8 +688,11 @@ module.exports = robot => {
             meritum: USER_INITIAL_MERITUM,
             titles: '',
             numOfTitles: 0
+          }),
+            { transaction: t };
+          fromAccount = yield accounts_1.Account.findByPk(fromSlackId, {
+            transaction: t
           });
-          fromAccount = yield accounts_1.Account.findByPk(fromSlackId);
         }
         // アカウントがない場合に作成してもまだないなら終了
         if (!fromAccount) {
@@ -661,7 +715,8 @@ module.exports = robot => {
           {
             where: {
               slackId: fromSlackId
-            }
+            },
+            transaction: t
           }
         );
         yield accounts_1.Account.update(
@@ -669,7 +724,8 @@ module.exports = robot => {
           {
             where: {
               slackId: toSlackId
-            }
+            },
+            transaction: t
           }
         );
         yield t.commit();
@@ -705,7 +761,8 @@ module.exports = robot => {
             receiptDate: {
               [sequelize_1.Op.eq]: receiptDate
             }
-          }
+          },
+          transaction: t
         });
         if (countOmikuji === 1) {
           // 占い済み
@@ -713,19 +770,26 @@ module.exports = robot => {
           res.send(`<@${slackId}>ちゃんは、既に今日の運勢を占ったよ。`);
         } else {
           // ボット自身に最低でも20めりたんあるかチェック
-          let botAccount = yield accounts_1.Account.findByPk(slackBot.self.id);
+          let botAccount = yield accounts_1.Account.findByPk(slackBot.self.id, {
+            transaction: t
+          });
           if (!botAccount) {
             // ボットアカウントがない場合作る
-            yield accounts_1.Account.create({
-              slackId: slackBot.self.id,
-              name: slackBot.self.name,
-              realName: '',
-              displayName: '',
-              meritum: BOT_INITIAL_MERITUM,
-              titles: '',
-              numOfTitles: 0
+            yield accounts_1.Account.create(
+              {
+                slackId: slackBot.self.id,
+                name: slackBot.self.name,
+                realName: '',
+                displayName: '',
+                meritum: BOT_INITIAL_MERITUM,
+                titles: '',
+                numOfTitles: 0
+              },
+              { transaction: t }
+            );
+            botAccount = yield accounts_1.Account.findByPk(slackBot.self.id, {
+              transaction: t
             });
-            botAccount = yield accounts_1.Account.findByPk(slackBot.self.id);
           } else if (botAccount.meritum < MAX_WIN) {
             // 最大景品分持っていない場合、終了
             res.send(
@@ -742,20 +806,27 @@ module.exports = robot => {
             return;
           }
           // 相手がおみくじできるかチェック
-          let account = yield accounts_1.Account.findByPk(slackId);
+          let account = yield accounts_1.Account.findByPk(slackId, {
+            transaction: t
+          });
           if (!account) {
             // アカウントがない場合作る
             const meritum = 0;
-            yield accounts_1.Account.create({
-              slackId,
-              name,
-              realName,
-              displayName,
-              meritum: USER_INITIAL_MERITUM,
-              titles: '',
-              numOfTitles: 0
+            yield accounts_1.Account.create(
+              {
+                slackId,
+                name,
+                realName,
+                displayName,
+                meritum: USER_INITIAL_MERITUM,
+                titles: '',
+                numOfTitles: 0
+              },
+              { transaction: t }
+            );
+            account = yield accounts_1.Account.findByPk(slackId, {
+              transaction: t
             });
-            account = yield accounts_1.Account.findByPk(slackId);
           } else if (account.meritum < OMIKUJI_MERITUM) {
             // おみくじ代分持っていない場合、終了
             res.send(
@@ -835,14 +906,18 @@ module.exports = robot => {
             {
               where: {
                 slackId: slackId
-              }
+              },
+              transaction: t
             }
           );
           // おみくじ実績を作成
-          yield omikuji_1.Omikuji.create({
-            slackId,
-            receiptDate
-          });
+          yield omikuji_1.Omikuji.create(
+            {
+              slackId,
+              receiptDate
+            },
+            { transaction: t }
+          );
           yield t.commit();
           if (prizeMeritum === 0) {
             res.send(
