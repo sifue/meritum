@@ -34,9 +34,15 @@ var __awaiter =
       step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
   };
+var __importDefault =
+  (this && this.__importDefault) ||
+  function(mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
 Object.defineProperty(exports, '__esModule', { value: true });
 const hubot_1 = require('hubot');
 const sequelize_1 = require('sequelize');
+const moment_1 = __importDefault(require('moment'));
 const sequelizeLoader_1 = require('./models/sequelizeLoader');
 const accounts_1 = require('./models/accounts');
 const loginBonuses_1 = require('./models/loginBonuses');
@@ -98,7 +104,7 @@ module.exports = robot => {
           where: {
             slackId: slackId,
             receiptDate: {
-              [sequelize_1.Op.eq]: receiptDate
+              [sequelize_1.Op.eq]: moment_1.default(receiptDate).format()
             }
           },
           transaction: t
@@ -759,7 +765,7 @@ module.exports = robot => {
           where: {
             slackId: slackId,
             receiptDate: {
-              [sequelize_1.Op.eq]: receiptDate
+              [sequelize_1.Op.eq]: moment_1.default(receiptDate).format()
             }
           },
           transaction: t

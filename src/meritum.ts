@@ -76,7 +76,7 @@ module.exports = (robot: Robot<any>) => {
         where: {
           slackId: slackId,
           receiptDate: {
-            [Op.eq]: receiptDate
+            [Op.eq]: moment(receiptDate).format()
           }
         },
         transaction: t
@@ -766,7 +766,7 @@ module.exports = (robot: Robot<any>) => {
         where: {
           slackId: slackId,
           receiptDate: {
-            [Op.eq]: receiptDate
+            [Op.eq]: moment(receiptDate).format()
           }
         },
         transaction: t
