@@ -294,6 +294,10 @@ module.exports = (robot) => {
             res.send('0以下のめりたんをかけてジャンケンはできないよ。');
             return;
         }
+        if (sendMeritum > MAX_USER_JANKEN_BET) {
+            res.send(`*${MAX_USER_JANKEN_BET}めりたん* 以上をかけてジャンケンすることは禁止されているよ。`);
+            return;
+        }
         const t = yield sequelizeLoader_1.database.transaction();
         try {
             let opponentAccount = yield accounts_1.Account.findByPk(opponentSlackId, { transaction: t });
@@ -435,7 +439,7 @@ module.exports = (robot) => {
                 mapUserJankenSession.set(channel, session);
                 // 60 秒後に自身の手が決まってないままだったらキャンセル
                 setTimeout(() => __awaiter(void 0, void 0, void 0, function* () {
-                    if (session.status === 'finished') {
+                    if (session.status === 'opponent_ready') {
                         mapUserJankenSession.delete(channel);
                         yield web.chat.postMessage({
                             channel: session.startChannel,
