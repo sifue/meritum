@@ -344,9 +344,9 @@ module.exports = robot => {
       }
     })
   );
-  // キーはユーザーのDMのルームIDとなっているセッションの連想配列
+  // キーはユーザーのDMのルームIDとなっているセッションのMap
   const mapUserJankenSession = new Map();
-  // ユーザーとめりたんを賭けてジャンケン
+  // 他のユーザーとめりたんを賭けてジャンケン
   robot.hear(/^muj> (.+) (\d+)/i, res =>
     __awaiter(void 0, void 0, void 0, function*() {
       var _a;
@@ -401,7 +401,7 @@ module.exports = robot => {
         const realName = myUser.real_name;
         const slack = myUser.slack;
         const displayName = slack.profile.display_name;
-        // XXX: デバッグ時は自身とのジャンケンを可能にする
+        // XXX: デバッグ時は自身とのジャンケンを可能にするとデバッグが楽、その際はこのブロックをコメントアウト
         if (mySlackId === opponentSlackId) {
           res.send('自身とはじゃんけんできないよ。');
           yield t.commit();
@@ -440,7 +440,7 @@ module.exports = robot => {
           yield t.commit();
           return;
         }
-        // @username から sendMeritum を賭けたジャンケンの誘いが来ています。30秒以内に
+        // DMでジャンケンの招待を送る
         const chatPostMessageResponse = yield web.chat.postMessage({
           channel: opponentSlackId,
           text: `<@${mySlackId}>ちゃんから  *${sendMeritum}めりたん* を賭けたジャンケンに招待されたよ。60秒以内に手を選択しない場合には勝負はキャンセルになるよ。`,
@@ -527,8 +527,8 @@ module.exports = robot => {
           message.reaction === 'raised_hand_with_fingers_splayed')
       ) {
         if (session.status === 'offering') {
+          // 敵の手が決まって送られてくる場合
           mapUserJankenSession.delete(message.room);
-          // 敵の手が決まってない場合
           const opponentSlackId = res.message.user.id;
           const opponentHand = message.reaction;
           session.opponentHand = message.reaction;
@@ -576,11 +576,11 @@ module.exports = robot => {
             LIMIT_TIME_SEC_USER_JANKEN * 1000
           );
         } else if (session.status === 'opponent_ready') {
+          // 自身の手が決まって送らてくる場合
           mapUserJankenSession.delete(message.room);
-          // 敵の手が決まっている場合
           const mySlackId = res.message.user.id;
           const myHand = message.reaction;
-          // 流れ的には、敵が先に手を決めているけども、手はわからないのでこのこのメッセージ、自身で手を確認する
+          // 流れ的には、敵が先に手を決めているけども、手はわからないので自身でこのメッセージを表示させ手を確認する
           yield web.chat.postMessage({
             channel: session.me,
             text: `<@${mySlackId}>ちゃんの手は :${myHand}: になりました。 <@${session.opponent}>ちゃんの手を待ちます。`,
@@ -591,7 +591,7 @@ module.exports = robot => {
             let myAccount = yield accounts_1.Account.findByPk(mySlackId, {
               transaction: t
             });
-            // 自分に賭けに必要なめりたんがチェック
+            // 自分に賭けに必要なめりたんがあるかチェック
             if (!myAccount || myAccount.meritum < session.sendMeritum) {
               yield web.chat.postMessage({
                 channel: session.startChannel,
@@ -607,7 +607,7 @@ module.exports = robot => {
               yield t.commit();
               return;
             }
-            // 相手に賭けに必要なめりたんがチェック
+            // 相手に賭けに必要なめりたんがあるかチェック
             let opponentAccount = yield accounts_1.Account.findByPk(
               session.opponent,
               {
