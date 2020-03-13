@@ -505,10 +505,11 @@ module.exports = robot => {
       if (message.type === 'added' && message.reaction === 'x' && session) {
         const cancellerSlackId = res.message.user.id;
         yield web.chat.postMessage({
-          channel: session.opponentChannel,
+          channel: session.startChannel,
           text: `<@${cancellerSlackId}>ちゃんが相手とのジャンケンをキャンセルしたみたい。`,
           as_user: true
         });
+        session.status = 'finished';
         return;
       }
       if (

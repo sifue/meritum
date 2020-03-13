@@ -489,10 +489,11 @@ module.exports = (robot: MRobot<any>) => {
     if (message.type === 'added' && message.reaction === 'x' && session) {
       const cancellerSlackId = res.message.user.id;
       (await web.chat.postMessage({
-        channel: session.opponentChannel,
+        channel: session.startChannel,
         text: `<@${cancellerSlackId}>ちゃんが相手とのジャンケンをキャンセルしたみたい。`,
         as_user: true
       })) as ChatPostMessageResponse;
+      session.status = 'finished';
       return;
     }
 
