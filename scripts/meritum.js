@@ -509,6 +509,7 @@ module.exports = robot => {
       const message = res.message;
       const session = mapUserJankenSession.get(message.room);
       if (message.type === 'added' && message.reaction === 'x' && session) {
+        mapUserJankenSession.delete(message.room);
         const cancellerSlackId = res.message.user.id;
         yield web.chat.postMessage({
           channel: session.startChannel,
@@ -526,6 +527,7 @@ module.exports = robot => {
           message.reaction === 'raised_hand_with_fingers_splayed')
       ) {
         if (session.status === 'offering') {
+          mapUserJankenSession.delete(message.room);
           // 敵の手が決まってない場合
           const opponentSlackId = res.message.user.id;
           const opponentHand = message.reaction;
@@ -574,6 +576,7 @@ module.exports = robot => {
             LIMIT_TIME_SEC_USER_JANKEN * 1000
           );
         } else if (session.status === 'opponent_ready') {
+          mapUserJankenSession.delete(message.room);
           // 敵の手が決まっている場合
           const mySlackId = res.message.user.id;
           const myHand = message.reaction;
