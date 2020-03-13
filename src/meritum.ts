@@ -358,6 +358,11 @@ module.exports = (robot: MRobot<any>) => {
       return;
     }
 
+    if (sendMeritum > MAX_USER_JANKEN_BET) {
+      res.send(`*${MAX_USER_JANKEN_BET}めりたん* 以上をかけてジャンケンすることは禁止されているよ。`);
+      return;
+    }
+
     const t = await database.transaction();
     try {
       let opponentAccount = await Account.findByPk(opponentSlackId, { transaction: t });
@@ -528,7 +533,7 @@ module.exports = (robot: MRobot<any>) => {
 
         // 60 秒後に自身の手が決まってないままだったらキャンセル
         setTimeout(async () => {
-          if (session.status === 'finished') {
+          if (session.status === 'opponent_ready') {
             mapUserJankenSession.delete(channel);
             await web.chat.postMessage({
               channel: session.startChannel,
