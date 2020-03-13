@@ -1,4 +1,4 @@
-import { Robot, Response, User } from 'hubot';
+import { Robot, Response, User, ListenerCallback } from 'hubot';
 
 export interface ResponseEnv<R> extends Response<R> {
   envelope: {
@@ -61,4 +61,22 @@ export interface SlackBot {
     manual_presence: string;
     bot_id: string;
   };
+}
+
+export type UserJankenStatus = 'offering' | 'opponent_ready' | 'finished';
+export interface UserJankenSession {
+  status: UserJankenStatus;
+  startChannel: string;
+  opponentChannel: string;
+  opponentTimestamp: string;
+  me: string;
+  opponent: string;
+  opponentHand?: string;
+  offeredTime: number;
+  opponentRedyTime?: number;
+  sendMeritum: number;
+}
+
+export class MRobot<A> extends Robot<A> {
+  react(callback: ListenerCallback<this>): void;
 }
