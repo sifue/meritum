@@ -556,9 +556,9 @@ module.exports = (robot: MRobot<any>) => {
         const mySlackId = res.message.user.id;
         const myHand = message.reaction;
 
-        // 流れ的には、敵が先に手を決めているけども、手はわからないのでこのこのメッセージ
+        // 流れ的には、敵が先に手を決めているけども、手はわからないのでこのこのメッセージ、自身で手を確認する
         (await web.chat.postMessage({
-          channel: session.opponentChannel,
+          channel: session.me,
           text: `<@${mySlackId}>ちゃんの手は :${myHand}: になりました。 <@${session.opponent}>ちゃんの手を待ちます。`,
           as_user: true
         })) as ChatPostMessageResponse;

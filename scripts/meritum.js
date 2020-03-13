@@ -378,7 +378,9 @@ module.exports = robot => {
       try {
         let opponentAccount = yield accounts_1.Account.findByPk(
           opponentSlackId,
-          { transaction: t }
+          {
+            transaction: t
+          }
         );
         if (!opponentAccount) {
           res.send('指定したユーザーはプロジェクトmeritumをやってないみたい。');
@@ -568,9 +570,9 @@ module.exports = robot => {
           // 敵の手が決まっている場合
           const mySlackId = res.message.user.id;
           const myHand = message.reaction;
-          // 流れ的には、敵が先に手を決めているけども、手はわからないのでこのこのメッセージ
+          // 流れ的には、敵が先に手を決めているけども、手はわからないのでこのこのメッセージ、自身で手を確認する
           yield web.chat.postMessage({
-            channel: session.opponentChannel,
+            channel: session.me,
             text: `<@${mySlackId}>ちゃんの手は :${myHand}: になりました。 <@${session.opponent}>ちゃんの手を待ちます。`,
             as_user: true
           });
@@ -598,7 +600,9 @@ module.exports = robot => {
             // 相手に賭けに必要なめりたんがチェック
             let opponentAccount = yield accounts_1.Account.findByPk(
               session.opponent,
-              { transaction: t }
+              {
+                transaction: t
+              }
             );
             if (
               !opponentAccount ||
