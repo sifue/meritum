@@ -105,6 +105,7 @@ module.exports = (robot: MRobot<any>) => {
         const oldAccount = await Account.findByPk(slackId, { transaction: t });
         let meritum = 0;
         if (!oldAccount) {
+          isBegginersLuck = true;
           meritum =
             LOGIN_BONUS_MERITUN * BEGGINERS_LUCK_FACTOR + USER_INITIAL_MERITUM;
           await Account.create(

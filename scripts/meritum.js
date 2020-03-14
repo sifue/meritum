@@ -130,6 +130,7 @@ module.exports = robot => {
           });
           let meritum = 0;
           if (!oldAccount) {
+            isBegginersLuck = true;
             meritum =
               LOGIN_BONUS_MERITUN * BEGGINERS_LUCK_FACTOR +
               USER_INITIAL_MERITUM;
