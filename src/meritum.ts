@@ -516,7 +516,7 @@ module.exports = (robot: MRobot<any>) => {
   });
 
   // ジャンケンの結果の受け取り
-  robot.react(async (res: Response<Robot<any>>) => {
+  robot.hearReaction(async (res: Response<Robot<any>>) => {
     const message = res.message as any;
     const session = mapUserJankenSession.get(message.room);
 

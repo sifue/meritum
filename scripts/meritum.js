@@ -527,7 +527,7 @@ module.exports = robot => {
     })
   );
   // ジャンケンの結果の受け取り
-  robot.react(res =>
+  robot.hearReaction(res =>
     __awaiter(void 0, void 0, void 0, function*() {
       var _b;
       const message = res.message;

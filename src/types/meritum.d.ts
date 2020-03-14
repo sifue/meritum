@@ -78,5 +78,5 @@ export interface UserJankenSession {
 }
 
 export class MRobot<A> extends Robot<A> {
-  react(callback: ListenerCallback<this>): void;
+  hearReaction(callback: ListenerCallback<this>): void;
 }
