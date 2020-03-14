@@ -49,9 +49,10 @@ const accounts_1 = require('./models/accounts');
 const loginBonuses_1 = require('./models/loginBonuses');
 const omikuji_1 = require('./models/omikuji');
 const LOGIN_BONUS_MERITUN = 100; // ログインボーナス
+const BEGGINERS_LUCK_FACTOR = 3; // ビギナーズラックの時のログインボーナス増加倍率
 const BOT_INITIAL_MERITUM = 20000; // ボットの初期めりたん
 const MAX_JANKEN_BET = 20; // 最大ベット
-const MAX_USER_JANKEN_BET = 200; // ユーザー同士ジャンケンの最大ベット
+const MAX_USER_JANKEN_BET = 100; // ユーザー同士ジャンケンの最大ベット
 const LIMIT_TIME_SEC_USER_JANKEN = 60; // ユーザー同士のジャンケンがキャンセルになる時間
 const GACHA_MERITUM = 280; // ガチャ費用
 const OMIKUJI_MERITUM = 10; // おみくじ費用
@@ -102,6 +103,7 @@ module.exports = robot => {
       const realName = user.real_name;
       const slack = user.slack;
       const displayName = slack.profile.display_name;
+      let isBegginersLuck = false;
       const t = yield sequelizeLoader_1.database.transaction();
       try {
         const receiptDate = getReceiptToday();
@@ -128,7 +130,9 @@ module.exports = robot => {
           });
           let meritum = 0;
           if (!oldAccount) {
-            meritum = LOGIN_BONUS_MERITUN + USER_INITIAL_MERITUM;
+            meritum =
+              LOGIN_BONUS_MERITUN * BEGGINERS_LUCK_FACTOR +
+              USER_INITIAL_MERITUM;
             yield accounts_1.Account.create(
               {
                 slackId,
@@ -142,7 +146,19 @@ module.exports = robot => {
               { transaction: t }
             );
           } else {
-            meritum = oldAccount.meritum + LOGIN_BONUS_MERITUN;
+            // 100 - 称号数 * 称号数 がビギナーズラックが起こるパーセンテージ
+            let beginnersLuckPercentage =
+              100 - Math.pow(oldAccount.numOfTitles, oldAccount.numOfTitles);
+            if (beginnersLuckPercentage < 0) beginnersLuckPercentage = 0;
+            isBegginersLuck = Math.random() < beginnersLuckPercentage / 100;
+            // 称号数が少ない人にはビギナーズラックでログインボーナスBEGGINERS_LUCK_FACTOR倍に
+            if (isBegginersLuck) {
+              meritum =
+                oldAccount.meritum +
+                LOGIN_BONUS_MERITUN * BEGGINERS_LUCK_FACTOR;
+            } else {
+              meritum = oldAccount.meritum + LOGIN_BONUS_MERITUN;
+            }
             // ログインボーナス取得時にユーザー名などを更新
             yield accounts_1.Account.update(
               {
@@ -166,9 +182,16 @@ module.exports = robot => {
           }),
             { transaction: t };
           yield t.commit();
-          res.send(
-            `<@${slackId}>ちゃんに、ログインボーナスとして *${LOGIN_BONUS_MERITUN}めりたん* をプレゼント。これで *${meritum}めりたん* になったよ。`
-          );
+          if (isBegginersLuck) {
+            res.send(
+              `<@${slackId}>ちゃんに、ログインボーナスとして *${LOGIN_BONUS_MERITUN *
+                BEGGINERS_LUCK_FACTOR}めりたん* をプレゼント。これで *${meritum}めりたん* になったよ。今回はビギナーズラックでボーナス${BEGGINERS_LUCK_FACTOR}倍になったよ！`
+            );
+          } else {
+            res.send(
+              `<@${slackId}>ちゃんに、ログインボーナスとして *${LOGIN_BONUS_MERITUN}めりたん* をプレゼント。これで *${meritum}めりたん* になったよ。`
+            );
+          }
         }
       } catch (e) {
         console.log('Error on mlogin> e:');
