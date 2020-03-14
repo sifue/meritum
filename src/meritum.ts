@@ -122,7 +122,7 @@ module.exports = (robot: MRobot<any>) => {
         } else {
           // 100 - 称号数 * 称号数 がビギナーズラックが起こるパーセンテージ
           let beginnersLuckPercentage =
-            100 - oldAccount.numOfTitles ** oldAccount.numOfTitles;
+            100 - oldAccount.numOfTitles * oldAccount.numOfTitles;
           if (beginnersLuckPercentage < 0) beginnersLuckPercentage = 0;
 
           isBegginersLuck = Math.random() < beginnersLuckPercentage / 100;

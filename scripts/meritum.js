@@ -148,7 +148,7 @@ module.exports = robot => {
           } else {
             // 100 - 称号数 * 称号数 がビギナーズラックが起こるパーセンテージ
             let beginnersLuckPercentage =
-              100 - Math.pow(oldAccount.numOfTitles, oldAccount.numOfTitles);
+              100 - oldAccount.numOfTitles * oldAccount.numOfTitles;
             if (beginnersLuckPercentage < 0) beginnersLuckPercentage = 0;
             isBegginersLuck = Math.random() < beginnersLuckPercentage / 100;
             // 称号数が少ない人にはビギナーズラックでログインボーナスBEGGINERS_LUCK_FACTOR倍に
