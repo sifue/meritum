@@ -383,7 +383,7 @@ module.exports = (robot: MRobot<any>) => {
 
     if (sendMeritum > MAX_USER_JANKEN_BET) {
       res.send(
-        `*${MAX_USER_JANKEN_BET}めりたん* 以上をかけてジャンケンすることは禁止されているよ。`
+        `*${MAX_USER_JANKEN_BET}めりたん* より多くをかけてジャンケンすることは禁止されているよ。`
       );
       return;
     }
