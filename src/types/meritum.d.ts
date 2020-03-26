@@ -1,4 +1,4 @@
-import { Robot, Response, User, ListenerCallback } from 'hubot';
+import { Robot, Response, Message, ListenerCallback } from 'hubot';
 
 export interface ResponseEnv<R> extends Response<R> {
   envelope: {
@@ -79,4 +79,8 @@ export interface UserJankenSession {
 
 export class MRobot<A> extends Robot<A> {
   hearReaction(callback: ListenerCallback<this>): void;
+}
+
+export class MessageWithRawText extends Message {
+  rawText?: string;
 }
