@@ -13,7 +13,7 @@ module.exports = robot => {
         'めりたんbotをランキング101位以下にしたらユーザーたちの勝利です。\n' +
         ':point_down::point_down::point_down::point_down: *〜コマンド説明〜* :point_down::point_down::point_down::point_down:\n' +
         '`mhelp>` : めりたんbotの使い方を表示。\n' +
-        '`mlogin>` : ログインボーナスの *100めりたん* をゲット。毎朝7時にリセット。\n' +
+        `\`mlogin>\` : ログインボーナスの *${constants_1.LOGIN_BONUS_MERITUN}めりたん* をゲット。毎朝7時にリセット。\n` +
         `\`mjanken> (グー|チョキ|パー) (1-${constants_1.MAX_JANKEN_BET})\` : めりたんbotとめりたんを賭けてジャンケン。\n` +
         `\`muj> (@ユーザー名) (1-${constants_1.MAX_USER_JANKEN_BET})\` : 指定したユーザーとめりたんを賭けてジャンケン。\n` +
         `\`mgacha>\` : *${constants_1.GACHA_MERITUM}めりたん* でガチャを回し、称号をゲット。\n` +
@@ -21,7 +21,8 @@ module.exports = robot => {
         '`mself>` : 自分の順位、称号数、全称号、めりたんを表示。\n' +
         '`mranking>` : 称号数で決まるランキングを表示(同称号数なら、めりたんの数順)。\n' +
         '`mrank> (@ユーザー名)` : 指定したユーザーの順位、称号数、全称号、めりたんを表示。\n' +
-        '`msend> (@ユーザー名) (数値)` : 指定したユーザーに数値で指定しためりたんを送る。'
+        '`msend> (@ユーザー名) (数値)` : 指定したユーザーに数値で指定しためりたんを送る。\n' +
+        `\`mbuy> (称号A-Z)\` : めりたんbotから * ${constants_1.BUY_TITLE_PRICE}めりたん* で指定した称号を強制的に買い取る。`
     );
   });
 };
