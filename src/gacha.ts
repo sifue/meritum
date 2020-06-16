@@ -116,10 +116,17 @@ module.exports = (robot: MRobot<any>) => {
         `称号 *${title}* を手に入れたよ！ 称号数は *${newTitlesStr.length}個* 、全称号は *${newTitlesStr}* 、残り *${newMeritum}めりたん* になったよ。`
       );
 
+      // クリアイベント
+      let botSlackId = (robot.adapter as SlackBot).self.id;
+      if (newTitlesStr.length === titles.length && slackId !== botSlackId) {
+        res.send(
+          `<@${slackId}>ちゃん、おめでとう！ これですべての称号を手に入れたよ！ <@${slackId}>ちゃんは *めりたん王* となりました！ ここまで遊んでくれて本当にありがとう！！！\n*:tada::tada::tada:GAME CLEAR:tada::tada::tada:*`
+        );
+      }
+
       // 既に持っている称号の場合は、5分の1の確率でめりたんbotに引き取られる
       if (account.titles.includes(title)) {
         if (Math.random() > 0.8) {
-          let botSlackId = (robot.adapter as SlackBot).self.id;
           let botAccount = await Account.findByPk(botSlackId, {
             transaction: t
           });
