@@ -8,3 +8,31 @@ export const GACHA_MERITUM = 280; // ガチャ費用
 export const OMIKUJI_MERITUM = 10; // おみくじ費用
 export const USER_INITIAL_MERITUM = GACHA_MERITUM + MAX_JANKEN_BET; // ユーザーの初期めりたん
 export const BUY_TITLE_PRICE = 3000; // めりたんbotから称号を買い取る時の価格
+export const TITLES = [
+  'A',
+  'B',
+  'C',
+  'D',
+  'E',
+  'F',
+  'G',
+  'H',
+  'I',
+  'J',
+  'K',
+  'L',
+  'M',
+  'N',
+  'O',
+  'P',
+  'Q',
+  'R',
+  'S',
+  'T',
+  'U',
+  'V',
+  'W',
+  'X',
+  'Y',
+  'Z'
+];

@@ -8,7 +8,7 @@ import { database } from './models/sequelizeLoader';
 import { Account } from './models/accounts';
 
 import { Slack, SlackBot, MRobot } from './types/meritum';
-import { GACHA_MERITUM, USER_INITIAL_MERITUM } from './constants';
+import { GACHA_MERITUM, USER_INITIAL_MERITUM, TITLES } from './constants';
 
 // DB同期
 (async () => {
@@ -61,35 +61,7 @@ module.exports = (robot: MRobot<any>) => {
         return;
       }
 
-      const titles = [
-        'A',
-        'B',
-        'C',
-        'D',
-        'E',
-        'F',
-        'G',
-        'H',
-        'I',
-        'J',
-        'K',
-        'L',
-        'M',
-        'N',
-        'O',
-        'P',
-        'Q',
-        'R',
-        'S',
-        'T',
-        'U',
-        'V',
-        'W',
-        'X',
-        'Y',
-        'Z'
-      ];
-      const title = titles[Math.floor(Math.random() * titles.length)];
+      const title = TITLES[Math.floor(Math.random() * TITLES.length)];
 
       let newTitles = account.titles.split('');
       newTitles.push(title);
@@ -118,7 +90,7 @@ module.exports = (robot: MRobot<any>) => {
 
       // クリアイベント
       let botSlackId = (robot.adapter as SlackBot).self.id;
-      if (newTitlesStr.length === titles.length && slackId !== botSlackId) {
+      if (newTitlesStr.length === TITLES.length && slackId !== botSlackId) {
         res.send(
           `<@${slackId}>ちゃん、おめでとう！ これですべての称号を手に入れたよ！ <@${slackId}>ちゃんは *めりたん王* となりました！ ここまで遊んでくれて本当にありがとう！！！\n*:tada::tada::tada:GAME CLEAR:tada::tada::tada:*`
         );
